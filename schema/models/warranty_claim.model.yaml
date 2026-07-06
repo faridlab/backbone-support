@@ -1,0 +1,86 @@
+# =============================================================================
+# Domain: Support
+# Entity: WarrantyClaim
+# Description: A claim against a delivered/serialized item. Support does NOT own serial or warranty
+# master data — it READS `item_id` + `serial_no` + the item's `warranty_expiry` (resolved by the caller
+# against a stock/catalog read model, logical FK only) and records whether the claim is under warranty
+# (`claim_date <= warranty_expiry`). Optionally links the Issue it was raised from. Posts NO GL.
+# =============================================================================
+
+models:
+  - name: WarrantyClaim
+    collection: warranty_claims
+    description: "A warranty claim against a serialized item (under-warranty computed from expiry)"
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique claim id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK to organization.Company.id"
+      customer_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "Claimant # logical FK to party.Party.id"
+      item_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Claimed item # logical FK to catalog.Product.id"
+      serial_no:
+        type: string?
+        attributes: ["@max(140)"]
+        description: "Serial number claimed against (logical ref to a stock serial)"
+      claim_date:
+        type: datetime
+        attributes: ["@required"]
+        description: "When the claim was filed"
+      warranty_expiry:
+        type: datetime?
+        description: "The item's warranty expiry (read from stock/catalog; NULL = unknown/none)"
+      is_under_warranty:
+        type: boolean
+        attributes: ["@default(false)"]
+        description: "claim_date <= warranty_expiry (computed at file time)"
+      status:
+        type: WarrantyStatus
+        attributes: ["@required", "@default(open)"]
+        description: "open → accepted / rejected → closed"
+      issue_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The support ticket this claim was raised from (optional) # logical FK to Issue.id"
+      description:
+        type: string?
+        attributes: ["@max(2000)"]
+        description: "What is being claimed"
+      resolution:
+        type: string?
+        attributes: ["@max(2000)"]
+        description: "How it was resolved (free-text)"
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+    indexes:
+      - type: index
+        fields: [company_id, status]
+      - type: index
+        fields: [customer_id]
+      - type: index
+        fields: [serial_no]
+
+enums:
+  - name: WarrantyStatus
+    description: "Warranty claim lifecycle"
+    variants:
+      - name: open
+        description: "Filed, under review"
+        default: true
+      - name: accepted
+        description: "Accepted (repair/replace/refund authorized)"
+      - name: rejected
+        description: "Rejected (out of warranty / not covered)"
+      - name: closed
+        description: "Closed (terminal)"

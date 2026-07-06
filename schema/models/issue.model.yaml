@@ -1,0 +1,122 @@
+# =============================================================================
+# Domain: Support
+# Entity: Issue
+# Description: A support ticket. It READS its customer from backbone-party (logical FK), binds an SLA at
+# raise time and snapshots concrete deadlines (`response_by` / `resolution_by`), and tracks the SLA
+# clock through `agreement_status`. A ticket can be put ON HOLD (pausing the clock — the paused span is
+# added back to the deadlines on resume) and can optionally be ESCALATED into a real backbone-project
+# delivery Project (`escalated_project_id`). Posts NO GL.
+# =============================================================================
+
+models:
+  - name: Issue
+    collection: issues
+    description: "A support ticket with SLA response/resolution clocks"
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique issue id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK to organization.Company.id"
+      customer_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The customer who raised it # logical FK to party.Party.id"
+      subject:
+        type: string
+        attributes: ["@required", "@max(200)"]
+        description: "Ticket subject"
+      description:
+        type: string?
+        attributes: ["@max(4000)"]
+        description: "Ticket detail"
+      priority:
+        type: IssuePriority
+        attributes: ["@required", "@default(medium)"]
+        description: "Priority — selects the SLA target row"
+      sla_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The bound SLA # logical FK to ServiceLevelAgreement.id"
+      status:
+        type: IssueStatus
+        attributes: ["@required", "@default(open)"]
+        description: "open → replied → on_hold → resolved → closed"
+      agreement_status:
+        type: AgreementStatus
+        attributes: ["@required", "@default(first_response_due)"]
+        description: "SLA clock state"
+      opened_at:
+        type: datetime
+        attributes: ["@required"]
+        description: "When the ticket was raised (clock start)"
+      response_by:
+        type: datetime?
+        description: "First-response deadline (opened_at + response target, extended by pauses)"
+      resolution_by:
+        type: datetime?
+        description: "Resolution deadline (opened_at + resolution target, extended by pauses)"
+      first_responded_at:
+        type: datetime?
+        description: "When the first response was recorded"
+      response_breached:
+        type: boolean
+        attributes: ["@default(false)"]
+        description: "The first response missed its response_by deadline (an SLA breach on the response leg)"
+      resolved_at:
+        type: datetime?
+        description: "When the ticket was resolved"
+      paused_at:
+        type: datetime?
+        description: "When the clock was paused (on_hold); NULL when running"
+      total_paused_mins:
+        type: integer
+        attributes: ["@default(0)", "@non_negative"]
+        description: "Accumulated paused minutes (added back to the deadlines)"
+      escalated_project_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "Delivery project spawned on escalation # logical FK to project.Project.id"
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+    indexes:
+      - type: index
+        fields: [company_id, status]
+      - type: index
+        fields: [customer_id]
+      - type: index
+        fields: [company_id, agreement_status]
+
+enums:
+  - name: IssueStatus
+    description: "Support ticket lifecycle"
+    variants:
+      - name: open
+        description: "Raised, awaiting first response"
+        default: true
+      - name: replied
+        description: "Responded, working toward resolution"
+      - name: on_hold
+        description: "Paused (waiting on customer / third party) — SLA clock stopped"
+      - name: resolved
+        description: "Resolved"
+      - name: closed
+        description: "Closed (terminal)"
+
+  - name: AgreementStatus
+    description: "SLA clock outcome state"
+    variants:
+      - name: first_response_due
+        description: "Awaiting the first response"
+        default: true
+      - name: resolution_due
+        description: "Responded, awaiting resolution"
+      - name: fulfilled
+        description: "Resolved within the resolution deadline"
+      - name: failed
+        description: "Resolution deadline breached"

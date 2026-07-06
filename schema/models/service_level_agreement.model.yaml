@@ -1,0 +1,87 @@
+# =============================================================================
+# Domain: Support
+# Entities: ServiceLevelAgreement (+ ServiceLevelPriority)
+# Description: The SLA master — per priority, how fast a first response and a resolution are promised.
+# An Issue binds to an SLA at raise time and snapshots the matching priority's targets into concrete
+# deadlines (response_by / resolution_by). SLA clocks are the load-bearing value of this module
+# (brief §6.3). Posts NO GL.
+# =============================================================================
+
+models:
+  - name: ServiceLevelAgreement
+    collection: service_level_agreements
+    description: "A support promise: first-response + resolution targets per priority"
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique SLA id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK to organization.Company.id"
+      name:
+        type: string
+        attributes: ["@required", "@max(140)"]
+        description: "SLA name (e.g. 'Standard', 'Priority Support')"
+      is_default:
+        type: boolean
+        attributes: ["@default(false)"]
+        description: "Applied to an issue that names no SLA (at most one default per company)"
+      is_active:
+        type: boolean
+        attributes: ["@default(true)"]
+        description: "Whether new issues can bind to this SLA"
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+    indexes:
+      - type: index
+        fields: [company_id, is_active]
+
+  - name: ServiceLevelPriority
+    collection: service_level_priorities
+    description: "Per-priority first-response + resolution targets (in minutes) for one SLA"
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique row id"
+      sla_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(ServiceLevelAgreement.id)"]
+        description: "Parent SLA"
+      priority:
+        type: IssuePriority
+        attributes: ["@required"]
+        description: "The priority this row targets"
+      response_time_mins:
+        type: integer
+        attributes: ["@required", "@non_negative"]
+        description: "Minutes allowed for the first response"
+      resolution_time_mins:
+        type: integer
+        attributes: ["@required", "@non_negative"]
+        description: "Minutes allowed to resolve (>= response_time_mins)"
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+    indexes:
+      - type: index
+        fields: [sla_id, priority]
+
+enums:
+  - name: IssuePriority
+    description: "Support ticket priority — selects the SLA target row"
+    variants:
+      - name: low
+        description: "Low"
+      - name: medium
+        description: "Medium"
+        default: true
+      - name: high
+        description: "High"
+      - name: urgent
+        description: "Urgent"
