@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS support.service_level_priorities (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     sla_id UUID NOT NULL,
     priority issue_priority NOT NULL,
-    response_time_mins INTEGER NOT NULL,
-    resolution_time_mins INTEGER NOT NULL,
+    response_time_mins INTEGER NOT NULL CHECK (response_time_mins >= 0),
+    resolution_time_mins INTEGER NOT NULL CHECK (resolution_time_mins >= 0),
     metadata JSONB NOT NULL DEFAULT '{"created_at":null,"updated_at":null,"deleted_at":null,"created_by":null,"updated_by":null,"deleted_by":null}'::jsonb,
     PRIMARY KEY (id)
 );

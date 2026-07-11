@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS support.issues (
     response_breached BOOLEAN NOT NULL DEFAULT FALSE,
     resolved_at TIMESTAMPTZ,
     paused_at TIMESTAMPTZ,
-    total_paused_mins INTEGER NOT NULL DEFAULT 0,
+    total_paused_mins INTEGER NOT NULL DEFAULT 0 CHECK (total_paused_mins >= 0),
     escalated_project_id UUID,
     metadata JSONB NOT NULL DEFAULT '{"created_at":null,"updated_at":null,"deleted_at":null,"created_by":null,"updated_by":null,"deleted_by":null}'::jsonb,
     PRIMARY KEY (id)
