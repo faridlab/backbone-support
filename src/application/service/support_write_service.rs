@@ -350,21 +350,34 @@ impl SupportWriteService {
             .await
             .map_err(|r| SupportError::ProjectRejected(r.code))?;
 
-        // Gate: claim the escalation exactly once.
+        // Gate: claim the escalation exactly once, and stage the event in the SAME tx (outbox rollout plan,
+        // P2): backbone-project subscribes to IssueEscalated to open the delivery project, so a crash between
+        // the CAS and the in-proc publish must not drop it.
+        let mut tx = self.pool.begin().await?;
         let moved = sqlx::query(
             r#"UPDATE support.issues SET escalated_project_id=$2
                WHERE id=$1 AND escalated_project_id IS NULL"#,
         )
         .bind(issue_id).bind(ack.project_id)
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
         if moved.rows_affected() != 1 {
+            tx.rollback().await?;
             let pid: Uuid = sqlx::query_scalar(
                 "SELECT escalated_project_id FROM support.issues WHERE id=$1")
                 .bind(issue_id).fetch_one(&self.pool).await?;
             return Ok(pid);
         }
-        sink.publish(&SupportEvent::IssueEscalated(IssueEscalated { issue_id, company_id, project_id: ack.project_id }));
+        let event = SupportEvent::IssueEscalated(IssueEscalated { issue_id, company_id, project_id: ack.project_id });
+        let record = backbone_outbox::OutboxRecord::new(
+            "IssueEscalated", "Issue", issue_id.to_string(),
+            serde_json::to_value(&event).map_err(|e| SupportError::Invalid(e.to_string()))?,
+            chrono::Utc::now(),
+        );
+        backbone_outbox::outbox::stage(&mut *tx, "support", &record)
+            .await.map_err(|e| SupportError::Invalid(format!("outbox stage: {e}")))?;
+        tx.commit().await?;
+        sink.publish(&event);
         Ok(ack.project_id)
     }
 

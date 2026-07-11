@@ -8,6 +8,7 @@ description = "Minimal Backbone Framework module skeleton"
 path = "src/lib.rs"
 
 [dependencies]
+backbone-outbox = { path = "../backbone-framework/backbone-outbox" }
 # -----------------------------------------------------------------------------
 # Backbone Framework crates
 #
