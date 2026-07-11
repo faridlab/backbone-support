@@ -12,9 +12,13 @@ use std::sync::Arc;
 // Import handlers
 use crate::presentation::http::{
     create_issue_routes,
+    create_issue_read_routes,
     create_service_level_agreement_routes,
+    create_service_level_agreement_read_routes,
     create_service_level_priority_routes,
-    create_warranty_claim_routes
+    create_service_level_priority_read_routes,
+    create_warranty_claim_routes,
+    create_warranty_claim_read_routes
 };
 
 // Import AppState for stateful routes
@@ -42,6 +46,19 @@ pub fn create_stateless_routes(module: &crate::SupportModule) -> Router<()> {
         .merge(create_service_level_agreement_routes(module.service_level_agreement_service.clone()))
         .merge(create_service_level_priority_routes(module.service_level_priority_service.clone()))
         .merge(create_warranty_claim_routes(module.warranty_claim_service.clone()))
+}
+
+/// Read-only routes for the Support module — every entity mounted READ-ONLY (the guarded base).
+///
+/// The generic `create_stateless_routes` exposes full mutable CRUD with no domain
+/// validation; this exposes only reads, so generic mutation can't bypass a write
+/// service's invariants. Extend it: `create_readonly_support_routes(m).merge(my_validated_writes)`.
+pub fn create_readonly_support_routes(module: &crate::SupportModule) -> Router<()> {
+    Router::new()
+        .merge(create_issue_read_routes(module.issue_service.clone()))
+        .merge(create_service_level_agreement_read_routes(module.service_level_agreement_service.clone()))
+        .merge(create_service_level_priority_read_routes(module.service_level_priority_service.clone()))
+        .merge(create_warranty_claim_read_routes(module.warranty_claim_service.clone()))
 }
 
 /// Get all routes (stateless) for the Support module.
