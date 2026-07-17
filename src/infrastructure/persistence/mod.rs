@@ -28,4 +28,10 @@ pub use backbone_orm::repository::{
 
 // Re-export custom persistence types
 // <<< CUSTOM
+// The hand-written support SQL's parameter/projection types (see the repositories declared
+// `user_owned` in metaphor.codegen.yaml).
+pub use issue_repository::{EscalationCandidateRow, IssueStateRow, NewIssueRow, PausedIssueRow};
+pub use service_level_agreement_repository::NewSlaRow;
+pub use service_level_priority_repository::{NewSlaPriorityRow, SlaTargetRow};
+pub use warranty_claim_repository::NewWarrantyClaimRow;
 // END CUSTOM

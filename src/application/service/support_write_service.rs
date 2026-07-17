@@ -11,8 +11,13 @@
 
 use backbone_orm::company_scope;
 use chrono::{DateTime, Duration, Utc};
-use sqlx::{PgPool, Row};
+use sqlx::PgPool;
 use uuid::Uuid;
+
+use crate::infrastructure::persistence::{
+    IssueRepository, NewIssueRow, NewSlaPriorityRow, NewSlaRow, NewWarrantyClaimRow,
+    ServiceLevelAgreementRepository, ServiceLevelPriorityRepository, WarrantyClaimRepository,
+};
 
 use super::support_events::*;
 use super::support_ports::*;
@@ -64,11 +69,19 @@ pub struct NewWarrantyClaim {
 
 pub struct SupportWriteService {
     pool: PgPool,
+    slas: ServiceLevelAgreementRepository,
+    sla_priorities: ServiceLevelPriorityRepository,
+    issues: IssueRepository,
+    warranty_claims: WarrantyClaimRepository,
 }
 
 impl SupportWriteService {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        let slas = ServiceLevelAgreementRepository::new(pool.clone());
+        let sla_priorities = ServiceLevelPriorityRepository::new(pool.clone());
+        let issues = IssueRepository::new(pool.clone());
+        let warranty_claims = WarrantyClaimRepository::new(pool.clone());
+        Self { pool, slas, sla_priorities, issues, warranty_claims }
     }
 
     /// Define an SLA with its per-priority first-response + resolution targets. Each target's resolution
@@ -94,22 +107,20 @@ impl SupportWriteService {
         // non-request (job) callers alike.
         let mut tx = self.pool.begin().await?;
         company_scope::bind_company_on(&mut tx, s.company_id).await?;
-        sqlx::query(
-            r#"INSERT INTO support.service_level_agreements (id, company_id, name, is_default, is_active)
-               VALUES ($1,$2,$3,$4,true)"#,
-        )
-        .bind(id).bind(s.company_id).bind(&s.name).bind(s.is_default)
-        .execute(&mut *tx)
-        .await?;
+        self.slas.insert_sla(&mut tx, &NewSlaRow {
+            id,
+            company_id: s.company_id,
+            name: &s.name,
+            is_default: s.is_default,
+        }).await?;
         for p in &s.priorities {
-            sqlx::query(
-                r#"INSERT INTO support.service_level_priorities
-                     (id, sla_id, priority, response_time_mins, resolution_time_mins)
-                   VALUES ($1,$2,$3::issue_priority,$4,$5)"#,
-            )
-            .bind(Uuid::new_v4()).bind(id).bind(&p.priority).bind(p.response_time_mins).bind(p.resolution_time_mins)
-            .execute(&mut *tx)
-            .await?;
+            self.sla_priorities.insert_priority(&mut tx, &NewSlaPriorityRow {
+                id: Uuid::new_v4(),
+                sla_id: id,
+                priority: &p.priority,
+                response_time_mins: p.response_time_mins,
+                resolution_time_mins: p.resolution_time_mins,
+            }).await?;
         }
         tx.commit().await?;
         Ok(id)
@@ -130,50 +141,32 @@ impl SupportWriteService {
             // Resolve the SLA: explicit, else the company default.
             let sla_id: Option<Uuid> = match i.sla_id {
                 Some(id) => Some(id),
-                None => company_scope::fetch_optional_scalar_scoped(
-                    &self.pool,
-                    sqlx::query_scalar(
-                        r#"SELECT id FROM support.service_level_agreements
-                           WHERE company_id=$1 AND is_default=true AND is_active=true
-                             AND (metadata->>'deleted_at') IS NULL LIMIT 1"#,
-                    )
-                    .bind(i.company_id),
-                )
-                .await?,
+                None => self.slas.find_default_id(&self.pool, i.company_id).await?,
             };
             // Snapshot deadlines from the matching priority target (if an SLA is bound).
             let (mut response_by, mut resolution_by) = (None, None);
             if let Some(sid) = sla_id {
-                let target = company_scope::fetch_optional_row_scoped(
-                    &self.pool,
-                    sqlx::query(
-                        r#"SELECT response_time_mins, resolution_time_mins FROM support.service_level_priorities
-                           WHERE sla_id=$1 AND priority=$2::issue_priority"#,
-                    )
-                    .bind(sid)
-                    .bind(&i.priority),
-                )
-                .await?
-                .ok_or(SupportError::Invalid("SLA has no target for this priority".into()))?;
-                let resp: i32 = target.get("response_time_mins");
-                let reso: i32 = target.get("resolution_time_mins");
-                response_by = Some(now + Duration::minutes(resp as i64));
-                resolution_by = Some(now + Duration::minutes(reso as i64));
+                let target = self
+                    .sla_priorities
+                    .find_target(&self.pool, sid, &i.priority)
+                    .await?
+                    .ok_or(SupportError::Invalid("SLA has no target for this priority".into()))?;
+                response_by = Some(now + Duration::minutes(target.response_time_mins as i64));
+                resolution_by = Some(now + Duration::minutes(target.resolution_time_mins as i64));
             }
             let id = Uuid::new_v4();
-            company_scope::execute_scoped(
-                &self.pool,
-                sqlx::query(
-                    r#"INSERT INTO support.issues
-                         (id, company_id, customer_id, subject, description, priority, sla_id, status,
-                          agreement_status, opened_at, response_by, resolution_by, total_paused_mins)
-                       VALUES ($1,$2,$3,$4,$5,$6::issue_priority,$7,'open'::issue_status,
-                               'first_response_due'::agreement_status,$8,$9,$10,0)"#,
-                )
-                .bind(id).bind(i.company_id).bind(i.customer_id).bind(&i.subject).bind(&i.description)
-                .bind(&i.priority).bind(sla_id).bind(now).bind(response_by).bind(resolution_by),
-            )
-            .await?;
+            self.issues.insert_issue(&self.pool, &NewIssueRow {
+                id,
+                company_id: i.company_id,
+                customer_id: i.customer_id,
+                subject: &i.subject,
+                description: i.description.as_deref(),
+                priority: &i.priority,
+                sla_id,
+                opened_at: now,
+                response_by,
+                resolution_by,
+            }).await?;
             Ok(id)
         })
         .await
@@ -189,21 +182,8 @@ impl SupportWriteService {
         // RLS scope (ADR-0008), ID-only pattern: identified by the issue id alone — there is no company
         // argument to scope from. The write rides the request-dedicated connection (which carries the
         // caller's `app.company_id`), so RLS fences it: another company's issue simply is not updated.
-        let moved = company_scope::execute_scoped(
-            &self.pool,
-            sqlx::query(
-                r#"UPDATE support.issues
-                   SET first_responded_at=$2, status='replied'::issue_status,
-                       response_breached = (response_by IS NOT NULL AND $2 > response_by),
-                       agreement_status = CASE WHEN response_by IS NOT NULL AND $2 > response_by
-                                               THEN 'failed'::agreement_status
-                                               ELSE 'resolution_due'::agreement_status END
-                   WHERE id=$1 AND status='open'::issue_status AND (metadata->>'deleted_at') IS NULL"#,
-            )
-            .bind(issue_id).bind(now),
-        )
-        .await?;
-        if moved.rows_affected() != 1 {
+        let moved = self.issues.record_first_response(&self.pool, issue_id, now).await?;
+        if moved != 1 {
             return Err(SupportError::InvalidState("issue is not awaiting a first response"));
         }
         Ok(())
@@ -212,17 +192,8 @@ impl SupportWriteService {
     /// Pause the SLA clock (ticket on hold — waiting on customer / third party).
     pub async fn pause_sla(&self, issue_id: Uuid, now: DateTime<Utc>) -> Result<(), SupportError> {
         // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`.
-        let moved = company_scope::execute_scoped(
-            &self.pool,
-            sqlx::query(
-                r#"UPDATE support.issues
-                   SET status='on_hold'::issue_status, paused_at=$2
-                   WHERE id=$1 AND status IN ('open','replied') AND (metadata->>'deleted_at') IS NULL"#,
-            )
-            .bind(issue_id).bind(now),
-        )
-        .await?;
-        if moved.rows_affected() != 1 {
+        let moved = self.issues.pause(&self.pool, issue_id, now).await?;
+        if moved != 1 {
             return Err(SupportError::InvalidState("only an open/replied issue can be paused"));
         }
         Ok(())
@@ -238,13 +209,7 @@ impl SupportWriteService {
         // `FOR UPDATE` read below is fenced to nothing and the resume fails closed.
         let mut tx = self.pool.begin().await?;
         company_scope::bind_current_company(&mut tx).await?;
-        let row = sqlx::query(
-            r#"SELECT paused_at, first_responded_at FROM support.issues
-               WHERE id=$1 AND status='on_hold'::issue_status FOR UPDATE"#,
-        )
-        .bind(issue_id)
-        .fetch_optional(&mut *tx)
-        .await?;
+        let row = self.issues.lock_on_hold(&mut tx, issue_id).await?;
         let row = match row {
             Some(r) => r,
             None => {
@@ -252,24 +217,11 @@ impl SupportWriteService {
                 return Err(SupportError::InvalidState("issue is not on hold"));
             }
         };
-        let paused_at: DateTime<Utc> = row.get("paused_at");
-        let responded: Option<DateTime<Utc>> = row.get("first_responded_at");
-        let paused_mins = (now - paused_at).num_minutes().max(0);
-        let running = if responded.is_some() { "replied" } else { "open" };
+        let paused_mins = (now - row.paused_at).num_minutes().max(0);
+        let running = if row.first_responded_at.is_some() { "replied" } else { "open" };
         // Extend the resolution deadline by the paused span; extend the response deadline too while the
         // first response is still outstanding.
-        sqlx::query(
-            r#"UPDATE support.issues
-               SET status=$3::issue_status, paused_at=NULL,
-                   total_paused_mins = total_paused_mins + $2,
-                   resolution_by = resolution_by + ($2 * interval '1 minute'),
-                   response_by = CASE WHEN first_responded_at IS NULL
-                                      THEN response_by + ($2 * interval '1 minute') ELSE response_by END
-               WHERE id=$1"#,
-        )
-        .bind(issue_id).bind(paused_mins as i32).bind(running)
-        .execute(&mut *tx)
-        .await?;
+        self.issues.apply_resume(&mut tx, issue_id, paused_mins as i32, running).await?;
         tx.commit().await?;
         Ok(())
     }
@@ -284,24 +236,18 @@ impl SupportWriteService {
     ) -> Result<bool, SupportError> {
         // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`: the read is fenced by the
         // request-dedicated connection, so another company's issue is simply not found.
-        let issue = company_scope::fetch_optional_row_scoped(
-            &self.pool,
-            sqlx::query(
-                r#"SELECT company_id, status::text AS status, resolution_by FROM support.issues
-                   WHERE id=$1 AND (metadata->>'deleted_at') IS NULL"#,
-            )
-            .bind(issue_id),
-        )
-        .await?
-        .ok_or(SupportError::NotFound("issue"))?;
-        let status: String = issue.get("status");
-        if status == "on_hold" {
+        let issue = self
+            .issues
+            .find_state(&self.pool, issue_id)
+            .await?
+            .ok_or(SupportError::NotFound("issue"))?;
+        if issue.status == "on_hold" {
             return Err(SupportError::InvalidState("resume the issue before resolving"));
         }
-        if status != "open" && status != "replied" {
+        if issue.status != "open" && issue.status != "replied" {
             return Err(SupportError::InvalidState("only an open/replied issue can be resolved"));
         }
-        let company_id: Uuid = issue.get("company_id");
+        let company_id = issue.company_id;
         // Compute the verdict INSIDE the gated UPDATE from the row's LIVE resolution_by — not from the
         // snapshot read above (which is only for the friendly on_hold/not-found errors). A concurrent
         // pause+resume that commits between that read and here extends resolution_by and restores an
@@ -316,28 +262,12 @@ impl SupportWriteService {
         // Having read the issue's company off the row above, bind it EXPLICITLY for the gated UPDATE —
         // so the write is fenced for non-request callers (jobs, event subscribers) too, not only under
         // an ambient request scope.
-        let row = company_scope::with_company_scope(
+        let fulfilled = company_scope::with_company_scope(
             Some(company_id),
-            company_scope::fetch_optional_row_scoped(
-                &self.pool,
-                sqlx::query(
-                    r#"UPDATE support.issues
-                       SET status='resolved'::issue_status, resolved_at=$2,
-                           agreement_status = CASE
-                               WHEN (resolution_by IS NULL OR $2 <= resolution_by)
-                                    AND NOT response_breached
-                                    AND (first_responded_at IS NOT NULL OR response_by IS NULL OR $2 <= response_by)
-                               THEN 'fulfilled'::agreement_status
-                               ELSE 'failed'::agreement_status END
-                       WHERE id=$1 AND status IN ('open','replied')
-                       RETURNING (agreement_status = 'fulfilled'::agreement_status) AS fulfilled"#,
-                )
-                .bind(issue_id).bind(now),
-            ),
+            self.issues.resolve(&self.pool, issue_id, now),
         )
         .await?
         .ok_or(SupportError::InvalidState("issue is no longer resolvable"))?;
-        let fulfilled: bool = row.get("fulfilled");
         sink.publish(&SupportEvent::IssueResolved(IssueResolved { issue_id, company_id, fulfilled }));
         Ok(fulfilled)
     }
@@ -345,16 +275,8 @@ impl SupportWriteService {
     /// Close a resolved ticket (terminal).
     pub async fn close_issue(&self, issue_id: Uuid) -> Result<(), SupportError> {
         // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`.
-        let moved = company_scope::execute_scoped(
-            &self.pool,
-            sqlx::query(
-                r#"UPDATE support.issues SET status='closed'::issue_status
-                   WHERE id=$1 AND status='resolved'::issue_status AND (metadata->>'deleted_at') IS NULL"#,
-            )
-            .bind(issue_id),
-        )
-        .await?;
-        if moved.rows_affected() != 1 {
+        let moved = self.issues.close(&self.pool, issue_id).await?;
+        if moved != 1 {
             return Err(SupportError::InvalidState("only a resolved issue can be closed"));
         }
         Ok(())
@@ -371,32 +293,26 @@ impl SupportWriteService {
     ) -> Result<Uuid, SupportError> {
         // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`. The company read off this
         // row is bound explicitly onto the escalation transaction below.
-        let issue = company_scope::fetch_optional_row_scoped(
-            &self.pool,
-            sqlx::query(
-                r#"SELECT company_id, customer_id, subject, status::text AS status, escalated_project_id
-                   FROM support.issues WHERE id=$1 AND (metadata->>'deleted_at') IS NULL"#,
-            )
-            .bind(issue_id),
-        )
-        .await?
-        .ok_or(SupportError::NotFound("issue"))?;
-        if let Some(pid) = issue.get::<Option<Uuid>, _>("escalated_project_id") {
+        let issue = self
+            .issues
+            .find_escalation_candidate(&self.pool, issue_id)
+            .await?
+            .ok_or(SupportError::NotFound("issue"))?;
+        if let Some(pid) = issue.escalated_project_id {
             return Ok(pid); // already escalated
         }
-        let status: String = issue.get("status");
-        if status == "resolved" || status == "closed" {
+        if issue.status == "resolved" || issue.status == "closed" {
             return Err(SupportError::InvalidState("a resolved/closed issue cannot be escalated"));
         }
-        let company_id: Uuid = issue.get("company_id");
+        let company_id = issue.company_id;
         let customer_id: Uuid = issue
-            .get::<Option<Uuid>, _>("customer_id")
+            .customer_id
             .ok_or(SupportError::Invalid("issue has no customer to open a project for".into()))?;
 
         // Open the delivery project (idempotent per issue on the project side).
         let ack = project
             .open_delivery_project(&ProjectFromIssue {
-                company_id, issue_id, customer_id, subject: issue.get("subject"),
+                company_id, issue_id, customer_id, subject: issue.subject,
             })
             .await
             .map_err(|r| SupportError::ProjectRejected(r.code))?;
@@ -408,21 +324,12 @@ impl SupportWriteService {
         // CAS and the outbox stage are fenced regardless of who drives the escalation.
         let mut tx = self.pool.begin().await?;
         company_scope::bind_company_on(&mut tx, company_id).await?;
-        let moved = sqlx::query(
-            r#"UPDATE support.issues SET escalated_project_id=$2
-               WHERE id=$1 AND escalated_project_id IS NULL"#,
-        )
-        .bind(issue_id).bind(ack.project_id)
-        .execute(&mut *tx)
-        .await?;
-        if moved.rows_affected() != 1 {
+        let moved = self.issues.claim_escalation(&mut tx, issue_id, ack.project_id).await?;
+        if moved != 1 {
             tx.rollback().await?;
-            let pid_q = sqlx::query_scalar(
-                "SELECT escalated_project_id FROM support.issues WHERE id=$1")
-                .bind(issue_id);
             let pid: Uuid = company_scope::with_company_scope(
                 Some(company_id),
-                company_scope::fetch_one_scalar_scoped(&self.pool, pid_q),
+                self.issues.fetch_escalated_project_id(&self.pool, issue_id),
             )
             .await?;
             return Ok(pid);
@@ -451,17 +358,21 @@ impl SupportWriteService {
         let under = c.warranty_expiry.map(|e| now <= e).unwrap_or(false);
         let id = Uuid::new_v4();
         // RLS scope (ADR-0008): the company is on the DTO — bind it for the insert.
-        let claim_q = sqlx::query(
-            r#"INSERT INTO support.warranty_claims
-                 (id, company_id, customer_id, item_id, serial_no, claim_date, warranty_expiry,
-                  is_under_warranty, status, issue_id, description)
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'open'::warranty_status,$9,$10)"#,
-        )
-        .bind(id).bind(c.company_id).bind(c.customer_id).bind(c.item_id).bind(&c.serial_no)
-        .bind(now).bind(c.warranty_expiry).bind(under).bind(c.issue_id).bind(&c.description);
+        let claim = NewWarrantyClaimRow {
+            id,
+            company_id: c.company_id,
+            customer_id: c.customer_id,
+            item_id: c.item_id,
+            serial_no: c.serial_no.as_deref(),
+            claim_date: now,
+            warranty_expiry: c.warranty_expiry,
+            is_under_warranty: under,
+            issue_id: c.issue_id,
+            description: c.description.as_deref(),
+        };
         company_scope::with_company_scope(
             Some(c.company_id),
-            company_scope::execute_scoped(&self.pool, claim_q),
+            self.warranty_claims.insert_claim(&self.pool, &claim),
         )
         .await?;
         sink.publish(&SupportEvent::WarrantyClaimFiled(WarrantyClaimFiled { claim_id: id, company_id: c.company_id, is_under_warranty: under }));
@@ -477,16 +388,11 @@ impl SupportWriteService {
     ) -> Result<(), SupportError> {
         let status = if accepted { "accepted" } else { "rejected" };
         // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`.
-        let moved = company_scope::execute_scoped(
-            &self.pool,
-            sqlx::query(
-                r#"UPDATE support.warranty_claims SET status=$2::warranty_status, resolution=$3
-                   WHERE id=$1 AND status='open'::warranty_status AND (metadata->>'deleted_at') IS NULL"#,
-            )
-            .bind(claim_id).bind(status).bind(&resolution),
-        )
-        .await?;
-        if moved.rows_affected() != 1 {
+        let moved = self
+            .warranty_claims
+            .adjudicate(&self.pool, claim_id, status, resolution.as_deref())
+            .await?;
+        if moved != 1 {
             return Err(SupportError::InvalidState("only an open claim can be adjudicated"));
         }
         Ok(())

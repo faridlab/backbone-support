@@ -14,6 +14,14 @@ user_owned:
   - "src/application/service/support_events.rs"
   - "src/application/service/support_ports.rs"
   - "src/application/service/support_write_service.rs"
+  # Own the hand-written support SQL (the SLA definition + its per-priority targets, the SLA clock's
+  # gated transitions, the escalation CAS, the warranty claim lifecycle) that the write service
+  # orchestrates. Declared here — not renamed with a `_custom` suffix — so the generator skips them
+  # wholesale; this declaration is what makes editing them legitimate.
+  - "src/infrastructure/persistence/issue_repository.rs"
+  - "src/infrastructure/persistence/service_level_agreement_repository.rs"
+  - "src/infrastructure/persistence/service_level_priority_repository.rs"
+  - "src/infrastructure/persistence/warranty_claim_repository.rs"
   - "tests/integrity_probes.rs"
   - "tests/support_escalation_seam.rs"
   - "tests/support_golden_cases.rs"
