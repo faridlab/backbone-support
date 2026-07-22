@@ -206,6 +206,9 @@ impl backbone_orm::EntityRepoMeta for ServiceLevelAgreement {
     fn search_fields() -> &'static [&'static str] {
         &["name"]
     }
+    fn company_field() -> Option<&'static str> {
+        Some("company_id")
+    }
 }
 
 /// Builder for ServiceLevelAgreement entity

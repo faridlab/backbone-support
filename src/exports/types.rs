@@ -178,6 +178,7 @@ impl From<ServiceLevelPriorityId> for Uuid {
 pub struct ServiceLevelPriorityDto {
     pub id: ServiceLevelPriorityId,
     pub sla_id: Uuid,
+    pub company_id: Uuid,
     pub priority: IssuePriority,
     pub response_time_mins: i32,
     pub resolution_time_mins: i32,

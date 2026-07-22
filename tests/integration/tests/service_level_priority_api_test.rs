@@ -25,6 +25,7 @@ impl TestDataGenerator for ServiceLevelPriorityTestData {
         json!({
             "id": Uuid::new_v4().to_string(),
             "sla_id": Uuid::new_v4().to_string(),
+            "company_id": Uuid::new_v4().to_string(),
             "priority": "low",
             "response_time_mins": 1,
             "resolution_time_mins": 1,
@@ -37,6 +38,7 @@ impl TestDataGenerator for ServiceLevelPriorityTestData {
         json!({
             "id": id,
             "sla_id": Uuid::new_v4().to_string(),
+            "company_id": Uuid::new_v4().to_string(),
             "priority": "low",
             "response_time_mins": 1,
             "resolution_time_mins": 1,

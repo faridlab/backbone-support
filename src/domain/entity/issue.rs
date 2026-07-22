@@ -344,6 +344,9 @@ impl backbone_orm::EntityRepoMeta for Issue {
     fn search_fields() -> &'static [&'static str] {
         &["subject"]
     }
+    fn company_field() -> Option<&'static str> {
+        Some("company_id")
+    }
 }
 
 /// Builder for Issue entity

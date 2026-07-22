@@ -46,6 +46,7 @@ impl ServiceLevelPriorityRepository {
 pub struct NewSlaPriorityRow<'a> {
     pub id: Uuid,
     pub sla_id: Uuid,
+    pub company_id: Uuid,
     pub priority: &'a str,
     pub response_time_mins: i32,
     pub resolution_time_mins: i32,
@@ -69,10 +70,10 @@ impl ServiceLevelPriorityRepository {
     ) -> Result<(), sqlx::Error> {
         sqlx::query(
             r#"INSERT INTO support.service_level_priorities
-                 (id, sla_id, priority, response_time_mins, resolution_time_mins)
-               VALUES ($1,$2,$3::issue_priority,$4,$5)"#,
+                 (id, sla_id, company_id, priority, response_time_mins, resolution_time_mins)
+               VALUES ($1,$2,$3,$4::issue_priority,$5,$6)"#,
         )
-        .bind(p.id).bind(p.sla_id).bind(p.priority).bind(p.response_time_mins).bind(p.resolution_time_mins)
+        .bind(p.id).bind(p.sla_id).bind(p.company_id).bind(p.priority).bind(p.response_time_mins).bind(p.resolution_time_mins)
         .execute(conn)
         .await?;
         Ok(())

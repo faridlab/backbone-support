@@ -52,6 +52,10 @@ models:
         type: uuid
         attributes: ["@required", "@foreign_key(ServiceLevelAgreement.id)"]
         description: "Parent SLA"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK to organization.Company.id (ADR-0010 fence)"
       priority:
         type: IssuePriority
         attributes: ["@required"]

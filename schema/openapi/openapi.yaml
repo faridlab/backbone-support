@@ -1906,6 +1906,7 @@ components:
       required:
         - id
         - sla_id
+        - company_id
         - priority
         - response_time_mins
         - resolution_time_mins
@@ -1915,6 +1916,9 @@ components:
           type: string
           format: uuid
         sla_id:
+          type: string
+          format: uuid
+        company_id:
           type: string
           format: uuid
         priority:
@@ -1945,12 +1949,16 @@ components:
       type: object
       required:
         - sla_id
+        - company_id
         - priority
         - response_time_mins
         - resolution_time_mins
         - metadata
       properties:
         sla_id:
+          type: string
+          format: uuid
+        company_id:
           type: string
           format: uuid
         priority:
@@ -1968,12 +1976,16 @@ components:
       type: object
       required:
         - sla_id
+        - company_id
         - priority
         - response_time_mins
         - resolution_time_mins
         - metadata
       properties:
         sla_id:
+          type: string
+          format: uuid
+        company_id:
           type: string
           format: uuid
         priority:
@@ -1991,6 +2003,9 @@ components:
       type: object
       properties:
         sla_id:
+          type: string
+          format: uuid
+        company_id:
           type: string
           format: uuid
         priority:

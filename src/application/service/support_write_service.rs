@@ -117,6 +117,7 @@ impl SupportWriteService {
             self.sla_priorities.insert_priority(&mut tx, &NewSlaPriorityRow {
                 id: Uuid::new_v4(),
                 sla_id: id,
+                company_id: s.company_id,
                 priority: &p.priority,
                 response_time_mins: p.response_time_mins,
                 resolution_time_mins: p.resolution_time_mins,
