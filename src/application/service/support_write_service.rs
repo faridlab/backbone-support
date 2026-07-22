@@ -337,7 +337,7 @@ impl SupportWriteService {
         }
         let event = SupportEvent::IssueEscalated(IssueEscalated { issue_id, company_id, project_id: ack.project_id });
         let record = backbone_outbox::OutboxRecord::new(
-            "IssueEscalated", "Issue", issue_id.to_string(),
+            "IssueEscalated", "Issue", issue_id.to_string(), company_id,
             serde_json::to_value(&event).map_err(|e| SupportError::Invalid(e.to_string()))?,
             chrono::Utc::now(),
         );
