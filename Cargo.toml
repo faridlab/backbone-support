@@ -8,7 +8,7 @@ description = "Minimal Backbone Framework module skeleton"
 path = "src/lib.rs"
 
 [dependencies]
-backbone-outbox = { path = "../backbone-framework/backbone-outbox" }
+backbone-outbox = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.4", features = ["multi_tenant"] }
 # -----------------------------------------------------------------------------
 # Backbone Framework crates
 #
