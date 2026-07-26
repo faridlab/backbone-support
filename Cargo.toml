@@ -1,6 +1,6 @@
 [package]
 name = "backbone-support"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 description = "Minimal Backbone Framework module skeleton"
 
@@ -8,7 +8,7 @@ description = "Minimal Backbone Framework module skeleton"
 path = "src/lib.rs"
 
 [dependencies]
-backbone-outbox = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.4", features = ["multi_tenant"] }
+backbone-outbox = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.6", features = ["multi_tenant"] }
 # -----------------------------------------------------------------------------
 # Backbone Framework crates
 #
@@ -18,10 +18,10 @@ backbone-outbox = { git = "https://github.com/faridlab/backbone-framework", tag 
 # or `rev = "<commit-sha>"`. Cargo dedupes the git fetch — the repo is only
 # cloned once even though four crates reference it.
 # -----------------------------------------------------------------------------
-backbone-core = { git = "https://github.com/faridlab/backbone-framework", branch = "main", features = ["postgres"] }
-backbone-orm = { git = "https://github.com/faridlab/backbone-framework", branch = "main" }
-backbone-auth = { git = "https://github.com/faridlab/backbone-framework", branch = "main" }
-backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", branch = "main" }
+backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.6", features = ["postgres"] }
+backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.6" }
+backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.6", features = ["axum"] }
+backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.6" }
 
 # Core async runtime and serialization
 tokio = { version = "1.0", features = ["full"] }
