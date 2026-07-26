@@ -51,7 +51,7 @@ async fn sgc2_resolve_within_deadline_fulfilled() {
     let company = Uuid::new_v4();
     let sla = sla_high_4h(&svc, company).await;
     let issue = svc.raise_issue(high_issue(company, sla), dt("2026-07-07T09:00:00Z")).await.unwrap();
-    svc.record_first_response(issue, dt("2026-07-07T09:30:00Z")).await.unwrap();
+    svc.record_first_response(issue, company, dt("2026-07-07T09:30:00Z")).await.unwrap();
 
     let fulfilled = svc.resolve_issue(issue, dt("2026-07-07T12:00:00Z"), &sink).await.unwrap();
     assert!(fulfilled, "resolved 12:00 < 13:00 deadline");
@@ -88,10 +88,10 @@ async fn sgc4_pause_extends_the_clock() {
     let sla = sla_high_4h(&svc, company).await;
     let issue = svc.raise_issue(high_issue(company, sla), dt("2026-07-07T09:00:00Z")).await.unwrap();
     // First response on time (09:30 < 10:00) so the response leg is met — isolates the resolution clock.
-    svc.record_first_response(issue, dt("2026-07-07T09:30:00Z")).await.unwrap();
+    svc.record_first_response(issue, company, dt("2026-07-07T09:30:00Z")).await.unwrap();
     // Original resolution_by = 13:00. Hold 10:00 → 12:00 (2h).
-    svc.pause_sla(issue, dt("2026-07-07T10:00:00Z")).await.unwrap();
-    svc.resume_sla(issue, dt("2026-07-07T12:00:00Z")).await.unwrap();
+    svc.pause_sla(issue, company, dt("2026-07-07T10:00:00Z")).await.unwrap();
+    svc.resume_sla(issue, company, dt("2026-07-07T12:00:00Z")).await.unwrap();
 
     let (resb, paused): (DateTime<Utc>, i32) = sqlx::query_as(
         "SELECT resolution_by, total_paused_mins FROM support.issues WHERE id=$1")

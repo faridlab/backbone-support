@@ -179,52 +179,82 @@ impl SupportWriteService {
     /// missed first response fails the SLA even if the resolution later lands on time (a met resolution
     /// no longer masks a blown response — completeness council 2026-07-07). Judged inside the gated
     /// UPDATE against the row's live `response_by` (pause-adjusted), never a stale read.
-    pub async fn record_first_response(&self, issue_id: Uuid, now: DateTime<Utc>) -> Result<(), SupportError> {
-        // RLS scope (ADR-0008), ID-only pattern: identified by the issue id alone — there is no company
-        // argument to scope from. The write rides the request-dedicated connection (which carries the
-        // caller's `app.company_id`), so RLS fences it: another company's issue simply is not updated.
-        let moved = self.issues.record_first_response(&self.pool, issue_id, now).await?;
-        if moved != 1 {
-            return Err(SupportError::InvalidState("issue is not awaiting a first response"));
-        }
-        Ok(())
+    ///
+    /// `company_id` scopes the gated UPDATE for the same reason as [`Self::resolve_issue`]: the caller's
+    /// tenant must own the row, not merely be authenticated.
+    pub async fn record_first_response(
+        &self,
+        issue_id: Uuid,
+        company_id: Uuid,
+        now: DateTime<Utc>,
+    ) -> Result<(), SupportError> {
+        // RLS scope (ADR-0008): company on the parameter — scope the gated UPDATE so it runs with
+        // `app.company_id` set. A principal of company A cannot reply to company B's issue by knowing
+        // its id; a mismatched tenant is indistinguishable from a missing response window
+        // (`InvalidState`), so this does not leak whether the id exists.
+        company_scope::with_company_scope(Some(company_id), async move {
+            let moved = self.issues.record_first_response(&self.pool, issue_id, now).await?;
+            if moved != 1 {
+                return Err(SupportError::InvalidState("issue is not awaiting a first response"));
+            }
+            Ok(())
+        })
+        .await
     }
 
     /// Pause the SLA clock (ticket on hold — waiting on customer / third party).
-    pub async fn pause_sla(&self, issue_id: Uuid, now: DateTime<Utc>) -> Result<(), SupportError> {
-        // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`.
-        let moved = self.issues.pause(&self.pool, issue_id, now).await?;
-        if moved != 1 {
-            return Err(SupportError::InvalidState("only an open/replied issue can be paused"));
-        }
-        Ok(())
+    ///
+    /// `company_id` scopes the gated UPDATE — see [`Self::record_first_response`].
+    pub async fn pause_sla(
+        &self,
+        issue_id: Uuid,
+        company_id: Uuid,
+        now: DateTime<Utc>,
+    ) -> Result<(), SupportError> {
+        // RLS scope (ADR-0008): company on the parameter — same shape as `record_first_response`.
+        company_scope::with_company_scope(Some(company_id), async move {
+            let moved = self.issues.pause(&self.pool, issue_id, now).await?;
+            if moved != 1 {
+                return Err(SupportError::InvalidState("only an open/replied issue can be paused"));
+            }
+            Ok(())
+        })
+        .await
     }
 
     /// Resume the SLA clock — add the paused span back to the outstanding deadlines so a hold never
     /// counts against the SLA. Restores the running status (open if not yet responded, else replied).
-    pub async fn resume_sla(&self, issue_id: Uuid, now: DateTime<Utc>) -> Result<(), SupportError> {
-        // RLS scope (ADR-0008), ID-only pattern: this method carries NO company — not on a parameter,
-        // and the locking read cannot be split out of the transaction. So the tx is bound to the
-        // AMBIENT task-local scope. Under HTTP that is the request's company. An EVENT-driven or job
-        // CALLER MUST wrap this call in `with_company_scope(Some(event.company_id))`, otherwise the
-        // `FOR UPDATE` read below is fenced to nothing and the resume fails closed.
-        let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
-        let row = self.issues.lock_on_hold(&mut tx, issue_id).await?;
-        let row = match row {
-            Some(r) => r,
-            None => {
-                tx.rollback().await?;
-                return Err(SupportError::InvalidState("issue is not on hold"));
-            }
-        };
-        let paused_mins = (now - row.paused_at).num_minutes().max(0);
-        let running = if row.first_responded_at.is_some() { "replied" } else { "open" };
-        // Extend the resolution deadline by the paused span; extend the response deadline too while the
-        // first response is still outstanding.
-        self.issues.apply_resume(&mut tx, issue_id, paused_mins as i32, running).await?;
-        tx.commit().await?;
-        Ok(())
+    ///
+    /// `company_id` scopes the locking read + apply — see [`Self::record_first_response`].
+    pub async fn resume_sla(
+        &self,
+        issue_id: Uuid,
+        company_id: Uuid,
+        now: DateTime<Utc>,
+    ) -> Result<(), SupportError> {
+        // RLS scope (ADR-0008): company on the parameter — the resume transaction binds it explicitly
+        // (`bind_company_on`), and the locking read + apply run inside the scope. The caller can no
+        // longer forget to scope the `FOR UPDATE` read inside `lock_on_hold`.
+        company_scope::with_company_scope(Some(company_id), async move {
+            let mut tx = self.pool.begin().await?;
+            company_scope::bind_company_on(&mut tx, company_id).await?;
+            let row = self.issues.lock_on_hold(&mut tx, issue_id).await?;
+            let row = match row {
+                Some(r) => r,
+                None => {
+                    tx.rollback().await?;
+                    return Err(SupportError::InvalidState("issue is not on hold"));
+                }
+            };
+            let paused_mins = (now - row.paused_at).num_minutes().max(0);
+            let running = if row.first_responded_at.is_some() { "replied" } else { "open" };
+            // Extend the resolution deadline by the paused span; extend the response deadline too while the
+            // first response is still outstanding.
+            self.issues.apply_resume(&mut tx, issue_id, paused_mins as i32, running).await?;
+            tx.commit().await?;
+            Ok(())
+        })
+        .await
     }
 
     /// Resolve a ticket. Judged `fulfilled` iff resolved at/before the (pause-adjusted) resolution
@@ -274,13 +304,22 @@ impl SupportWriteService {
     }
 
     /// Close a resolved ticket (terminal).
-    pub async fn close_issue(&self, issue_id: Uuid) -> Result<(), SupportError> {
-        // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`.
-        let moved = self.issues.close(&self.pool, issue_id).await?;
-        if moved != 1 {
-            return Err(SupportError::InvalidState("only a resolved issue can be closed"));
-        }
-        Ok(())
+    ///
+    /// `company_id` scopes the gated UPDATE — see [`Self::record_first_response`].
+    pub async fn close_issue(
+        &self,
+        issue_id: Uuid,
+        company_id: Uuid,
+    ) -> Result<(), SupportError> {
+        // RLS scope (ADR-0008): company on the parameter — same shape as `record_first_response`.
+        company_scope::with_company_scope(Some(company_id), async move {
+            let moved = self.issues.close(&self.pool, issue_id).await?;
+            if moved != 1 {
+                return Err(SupportError::InvalidState("only a resolved issue can be closed"));
+            }
+            Ok(())
+        })
+        .await
     }
 
     /// Escalate a ticket into a real backbone-project delivery Project (drives `ProjectPort`, idempotent
@@ -381,21 +420,27 @@ impl SupportWriteService {
     }
 
     /// Adjudicate an open warranty claim (accept or reject) with a resolution note.
+    ///
+    /// `company_id` scopes the gated UPDATE — see [`Self::record_first_response`].
     pub async fn resolve_warranty_claim(
         &self,
         claim_id: Uuid,
+        company_id: Uuid,
         accepted: bool,
         resolution: Option<String>,
     ) -> Result<(), SupportError> {
         let status = if accepted { "accepted" } else { "rejected" };
-        // RLS scope (ADR-0008), ID-only pattern — see `record_first_response`.
-        let moved = self
-            .warranty_claims
-            .adjudicate(&self.pool, claim_id, status, resolution.as_deref())
-            .await?;
-        if moved != 1 {
-            return Err(SupportError::InvalidState("only an open claim can be adjudicated"));
-        }
-        Ok(())
+        // RLS scope (ADR-0008): company on the parameter — same shape as `record_first_response`.
+        company_scope::with_company_scope(Some(company_id), async move {
+            let moved = self
+                .warranty_claims
+                .adjudicate(&self.pool, claim_id, status, resolution.as_deref())
+                .await?;
+            if moved != 1 {
+                return Err(SupportError::InvalidState("only an open claim can be adjudicated"));
+            }
+            Ok(())
+        })
+        .await
     }
 }

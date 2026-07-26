@@ -72,10 +72,10 @@ async fn ip3_resolved_terminal() {
     svc.resolve_issue(issue, dt("2026-07-07T10:00:00Z"), &sink).await.unwrap();
 
     assert!(matches!(svc.resolve_issue(issue, dt("2026-07-07T11:00:00Z"), &sink).await, Err(SupportError::InvalidState(_))));
-    assert!(matches!(svc.pause_sla(issue, dt("2026-07-07T11:00:00Z")).await, Err(SupportError::InvalidState(_))));
+    assert!(matches!(svc.pause_sla(issue, company, dt("2026-07-07T11:00:00Z")).await, Err(SupportError::InvalidState(_))));
     assert!(matches!(svc.escalate_to_project(issue, &project, &sink).await, Err(SupportError::InvalidState(_))));
     let _ = &pool;
-    svc.close_issue(issue).await.unwrap(); // resolved → closed is allowed
+    svc.close_issue(issue, company).await.unwrap(); // resolved → closed is allowed
 }
 
 /// IP-4 — a ticket with no SLA is always fulfilled on resolve (no promise to breach).
@@ -144,7 +144,7 @@ async fn ip7_first_response_breach_fails_sla() {
 
     // (a) Late first response (11:30 > 10:00) breaches the response leg immediately.
     let late = svc.raise_issue(an_issue(company, Some(sla), Some(Uuid::new_v4())), dt("2026-07-07T09:00:00Z")).await.unwrap();
-    svc.record_first_response(late, dt("2026-07-07T11:30:00Z")).await.unwrap();
+    svc.record_first_response(late, company, dt("2026-07-07T11:30:00Z")).await.unwrap();
     let (agr, breached): (String, bool) = sqlx::query_as(
         "SELECT agreement_status::text, response_breached FROM support.issues WHERE id=$1")
         .bind(late).fetch_one(&pool).await.unwrap();
@@ -161,7 +161,7 @@ async fn ip7_first_response_breach_fails_sla() {
 
     // (c) Control: on-time response + on-time resolution is fulfilled.
     let ok = svc.raise_issue(an_issue(company, Some(sla), Some(Uuid::new_v4())), dt("2026-07-07T09:00:00Z")).await.unwrap();
-    svc.record_first_response(ok, dt("2026-07-07T09:30:00Z")).await.unwrap();
+    svc.record_first_response(ok, company, dt("2026-07-07T09:30:00Z")).await.unwrap();
     assert!(svc.resolve_issue(ok, dt("2026-07-07T12:00:00Z"), &sink).await.unwrap(), "both legs met → fulfilled");
 }
 
@@ -187,7 +187,7 @@ async fn ip6_resolve_verdict_atomic_with_deadline() {
         .await
         .unwrap();
     // On-time first response (09:30 < 10:00) so the response leg is met — isolates the resolution verdict.
-    setup.record_first_response(issue, dt("2026-07-07T09:30:00Z")).await.unwrap();
+    setup.record_first_response(issue, company, dt("2026-07-07T09:30:00Z")).await.unwrap();
 
     // A concurrent pause+resume, held in a transaction so it commits INSIDE resolve's read→write gap.
     let mut txb = pool.begin().await.unwrap();
