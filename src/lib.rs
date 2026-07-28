@@ -53,10 +53,10 @@ use sqlx::PgPool;
 /// let router = support.all_crud_routes();
 /// ```
 pub struct SupportModule {
-    pub issue_service: Arc<IssueService>,
-    pub service_level_agreement_service: Arc<ServiceLevelAgreementService>,
-    pub service_level_priority_service: Arc<ServiceLevelPriorityService>,
-    pub warranty_claim_service: Arc<WarrantyClaimService>,
+    pub(crate) issue_service: Arc<IssueService>,
+    pub(crate) service_level_agreement_service: Arc<ServiceLevelAgreementService>,
+    pub(crate) service_level_priority_service: Arc<ServiceLevelPriorityService>,
+    pub(crate) warranty_claim_service: Arc<WarrantyClaimService>,
 }
 
 impl SupportModule {
