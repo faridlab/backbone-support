@@ -5,8 +5,6 @@
 //! These services provide the public API for other modules.
 //! They only expose read operations - writes go through events.
 
-use std::sync::Arc;
-
 use anyhow::Result;
 use async_trait::async_trait;
 use uuid::Uuid;
@@ -59,21 +57,6 @@ pub trait SupportQueryService: Send + Sync {
     /// Check if WarrantyClaim exists
     async fn warranty_claim_exists(&self, id: WarrantyClaimId) -> Result<bool>;
 
-}
-
-// ============================================================================
-// QUERY SERVICE IMPLEMENTATION
-// ============================================================================
-
-/// Default implementation of SupportQueryService
-pub struct SupportQueryServiceImpl<R> {
-    repository: Arc<R>,
-}
-
-impl<R> SupportQueryServiceImpl<R> {
-    pub fn new(repository: Arc<R>) -> Self {
-        Self { repository }
-    }
 }
 
 // ============================================================================
