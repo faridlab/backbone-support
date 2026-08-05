@@ -23,6 +23,7 @@ pub mod infrastructure;
 pub mod application;
 pub mod presentation;
 pub mod seeders;
+pub mod exports;
 
 // Re-exports for convenience - Domain entities
 pub use domain::entity::*;
@@ -57,6 +58,8 @@ pub struct SupportModule {
     pub(crate) service_level_agreement_service: Arc<ServiceLevelAgreementService>,
     pub(crate) service_level_priority_service: Arc<ServiceLevelPriorityService>,
     pub(crate) warranty_claim_service: Arc<WarrantyClaimService>,
+    // <<< CUSTOM FIELDS
+    // END CUSTOM
 }
 
 impl SupportModule {
@@ -90,10 +93,33 @@ impl SupportModule {
     /// mount exposes unguarded writes. Compose a guarded router (read + validated
     /// writes) for production, or call `all_crud_routes()` to opt into the full
     /// unguarded surface explicitly.
-    #[deprecated(note = "mounts unvalidated generic CRUD on every entity; compose a guarded router for production, or call all_crud_routes() for the intentional full/unguarded surface")]
+    #[deprecated(note = "mounts unvalidated generic CRUD; prefer readonly_routes() + validated writes, or all_crud_routes() for the full/unguarded surface")]
     pub fn routes(&self) -> Router {
         self.all_crud_routes()
     }
+
+    /// Read-only routes for every entity (GET endpoints only) — the safe base.
+    ///
+    /// Generic mutation can't reach here, so this surface cannot bypass a
+    /// validated write service's invariants. Use this as the production base and
+    /// merge validated write routes (or a write service's HTTP layer) onto it.
+    pub fn readonly_routes(&self) -> Router {
+        use presentation::http::{
+            create_issue_read_routes,
+            create_service_level_agreement_read_routes,
+            create_service_level_priority_read_routes,
+            create_warranty_claim_read_routes,
+        };
+
+        Router::new()
+            .merge(create_issue_read_routes(self.issue_service.clone()))
+            .merge(create_service_level_agreement_read_routes(self.service_level_agreement_service.clone()))
+            .merge(create_service_level_priority_read_routes(self.service_level_priority_service.clone()))
+            .merge(create_warranty_claim_read_routes(self.warranty_claim_service.clone()))
+    }
+
+    // <<< CUSTOM METHODS
+    // END CUSTOM
 }
 
 /// Builder for SupportModule

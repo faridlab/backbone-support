@@ -8,7 +8,7 @@
 //! ## Usage from other modules
 //!
 //! ```text
-//! use support::exports::{IssueDto, SupportQueryService};
+//! use support::exports::{IssueDto};
 //! ```
 
 mod types;
@@ -39,9 +39,6 @@ pub use events::*;
 /// - `WarrantyClaimDto` - Data transfer object for WarrantyClaim
 /// - `WarrantyClaimSummary` - Summary view of WarrantyClaim
 /// - `WarrantyClaimId` - Type-safe ID wrapper
-///
-/// ## Public Services
-/// - `SupportQueryService` - Read-only queries
 ///
 /// ## Public Events
 /// - `IssueCreatedEvent` - Published when Issue is created
