@@ -185,4 +185,3 @@ pub fn create_protected_service_level_priority_routes<A: AuthMiddleware + Send +
             }
         }))
 }
-

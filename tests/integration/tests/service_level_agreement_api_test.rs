@@ -27,7 +27,7 @@ impl TestDataGenerator for ServiceLevelAgreementTestData {
             "company_id": Uuid::new_v4().to_string(),
             "name": format!("Test {}", Uuid::new_v4().to_string().split('-').next().unwrap()),
             "is_default": false,
-            "is_active": false,
+            "status": "active",
             "metadata": json!({}),
         })
     }
@@ -39,7 +39,7 @@ impl TestDataGenerator for ServiceLevelAgreementTestData {
             "company_id": Uuid::new_v4().to_string(),
             "name": format!("Test {}", Uuid::new_v4().to_string().split('-').next().unwrap()),
             "is_default": false,
-            "is_active": false,
+            "status": "active",
             "metadata": json!({}),
         })
     }

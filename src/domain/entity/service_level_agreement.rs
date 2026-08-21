@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+
+use super::ServiceLevelAgreementStatus;
 use super::AuditMetadata;
 
 /// Strongly-typed ID for ServiceLevelAgreement
@@ -51,7 +53,7 @@ pub struct ServiceLevelAgreement {
     pub company_id: Uuid,
     pub name: String,
     pub is_default: bool,
-    pub is_active: bool,
+    pub status: ServiceLevelAgreementStatus,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -60,17 +62,17 @@ pub struct ServiceLevelAgreement {
 impl ServiceLevelAgreement {
     /// Create a builder for ServiceLevelAgreement
     pub fn builder() -> ServiceLevelAgreementBuilder {
-        ServiceLevelAgreementBuilder::default()
+        <ServiceLevelAgreementBuilder as Default>::default()
     }
 
     /// Create a new ServiceLevelAgreement with required fields
-    pub fn new(company_id: Uuid, name: String, is_default: bool, is_active: bool) -> Self {
+    pub fn new(company_id: Uuid, name: String, is_default: bool, status: ServiceLevelAgreementStatus) -> Self {
         Self {
             id: Uuid::new_v4(),
             company_id,
             name,
             is_default,
-            is_active,
+            status,
             metadata: AuditMetadata::default(),
         }
     }
@@ -125,6 +127,11 @@ impl ServiceLevelAgreement {
         self.metadata.deleted_by.as_ref()
     }
 
+    /// Get the current status
+    pub fn status(&self) -> &ServiceLevelAgreementStatus {
+        &self.status
+    }
+
 
     // ==========================================================
     // Partial Update
@@ -143,8 +150,8 @@ impl ServiceLevelAgreement {
                 "is_default" => {
                     if let Ok(v) = serde_json::from_value(value) { self.is_default = v; }
                 }
-                "is_active" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.is_active = v; }
+                "status" => {
+                    if let Ok(v) = serde_json::from_value(value) { self.status = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -201,6 +208,7 @@ impl backbone_orm::EntityRepoMeta for ServiceLevelAgreement {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("company_id".to_string(), "uuid".to_string());
+        m.insert("status".to_string(), "service_level_agreement_status".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
@@ -220,7 +228,7 @@ pub struct ServiceLevelAgreementBuilder {
     company_id: Option<Uuid>,
     name: Option<String>,
     is_default: Option<bool>,
-    is_active: Option<bool>,
+    status: Option<ServiceLevelAgreementStatus>,
 }
 
 impl ServiceLevelAgreementBuilder {
@@ -242,9 +250,9 @@ impl ServiceLevelAgreementBuilder {
         self
     }
 
-    /// Set the is_active field (default: `true`)
-    pub fn is_active(mut self, value: bool) -> Self {
-        self.is_active = Some(value);
+    /// Set the status field (default: `ServiceLevelAgreementStatus::default()`)
+    pub fn status(mut self, value: ServiceLevelAgreementStatus) -> Self {
+        self.status = Some(value);
         self
     }
 
@@ -260,7 +268,7 @@ impl ServiceLevelAgreementBuilder {
             company_id,
             name,
             is_default: self.is_default.unwrap_or(false),
-            is_active: self.is_active.unwrap_or(true),
+            status: self.status.unwrap_or_default(),
             metadata: AuditMetadata::default(),
         })
     }

@@ -69,7 +69,7 @@ pub struct WarrantyClaim {
 impl WarrantyClaim {
     /// Create a builder for WarrantyClaim
     pub fn builder() -> WarrantyClaimBuilder {
-        WarrantyClaimBuilder::default()
+        <WarrantyClaimBuilder as Default>::default()
     }
 
     /// Create a new WarrantyClaim with required fields
@@ -400,7 +400,7 @@ impl WarrantyClaimBuilder {
             claim_date,
             warranty_expiry: self.warranty_expiry,
             is_under_warranty: self.is_under_warranty.unwrap_or(false),
-            status: self.status.unwrap_or(WarrantyStatus::default()),
+            status: self.status.unwrap_or_default(),
             issue_id: self.issue_id,
             description: self.description,
             resolution: self.resolution,

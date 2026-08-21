@@ -122,7 +122,7 @@ pub struct ServiceLevelAgreementDto {
     pub company_id: Uuid,
     pub name: String,
     pub is_default: bool,
-    pub is_active: bool,
+    pub status: ServiceLevelAgreementStatus,
     pub metadata: serde_json::Value,
 }
 
@@ -131,6 +131,7 @@ pub struct ServiceLevelAgreementDto {
 pub struct ServiceLevelAgreementSummary {
     pub id: ServiceLevelAgreementId,
     pub name: String,
+    pub status: ServiceLevelAgreementStatus,
 }
 
 /// Reference to ServiceLevelAgreement for foreign key relationships

@@ -18,6 +18,7 @@ use validator::Validate;
 
 use crate::domain::entity::ServiceLevelAgreement;
 use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::ServiceLevelAgreementStatus;
 
 // =============================================================================
 // Create DTO
@@ -41,9 +42,7 @@ pub struct CreateServiceLevelAgreementDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_default")]
     pub is_default: bool,
-    #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_active")]
-    pub is_active: bool,
+    pub status: ServiceLevelAgreementStatus,
 }
 
 // =============================================================================
@@ -68,9 +67,7 @@ pub struct UpdateServiceLevelAgreementDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_default")]
     pub is_default: bool,
-    #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_active")]
-    pub is_active: bool,
+    pub status: ServiceLevelAgreementStatus,
 }
 
 // =============================================================================
@@ -96,15 +93,14 @@ pub struct PatchServiceLevelAgreementDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_default")]
     pub is_default: Option<bool>,
-    #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "is_active")]
-    pub is_active: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<ServiceLevelAgreementStatus>,
 }
 
 impl PatchServiceLevelAgreementDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some() || self.name.is_some() || self.is_default.is_some() || self.is_active.is_some()
+        self.company_id.is_some() || self.name.is_some() || self.is_default.is_some() || self.status.is_some()
     }
 }
 
@@ -128,8 +124,7 @@ pub struct ServiceLevelAgreementResponseDto {
     pub name: String,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     pub is_default: bool,
-    #[cfg_attr(feature = "openapi", schema(example = true))]
-    pub is_active: bool,
+    pub status: ServiceLevelAgreementStatus,
     pub metadata: AuditMetadata,
 }
 
@@ -204,7 +199,7 @@ impl From<ServiceLevelAgreement> for ServiceLevelAgreementResponseDto {
             company_id: entity.company_id,
             name: entity.name,
             is_default: entity.is_default,
-            is_active: entity.is_active,
+            status: entity.status,
             metadata: entity.metadata,
         }
     }
@@ -230,7 +225,7 @@ impl From<CreateServiceLevelAgreementDto> for ServiceLevelAgreement {
             company_id: dto.company_id,
             name: dto.name,
             is_default: dto.is_default,
-            is_active: dto.is_active,
+            status: dto.status,
             metadata: AuditMetadata::default(),
         }
     }
@@ -243,7 +238,7 @@ impl From<&ServiceLevelAgreement> for ServiceLevelAgreementResponseDto {
             company_id: entity.company_id.clone(),
             name: entity.name.clone(),
             is_default: entity.is_default.clone(),
-            is_active: entity.is_active.clone(),
+            status: entity.status.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -260,7 +255,7 @@ impl backbone_core::ApplyUpdateDto<UpdateServiceLevelAgreementDto> for ServiceLe
         self.company_id = dto.company_id;
         self.name = dto.name;
         self.is_default = dto.is_default;
-        self.is_active = dto.is_active;
+        self.status = dto.status;
         Ok(self)
     }
 }
@@ -273,4 +268,3 @@ impl backbone_core::ApplyUpdateDto<UpdateServiceLevelAgreementDto> for ServiceLe
 // Add custom DTOs specific to ServiceLevelAgreement here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
-

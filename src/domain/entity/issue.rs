@@ -77,7 +77,7 @@ pub struct Issue {
 impl Issue {
     /// Create a builder for Issue
     pub fn builder() -> IssueBuilder {
-        IssueBuilder::default()
+        <IssueBuilder as Default>::default()
     }
 
     /// Create a new Issue with required fields
@@ -491,10 +491,10 @@ impl IssueBuilder {
             customer_id: self.customer_id,
             subject,
             description: self.description,
-            priority: self.priority.unwrap_or(IssuePriority::default()),
+            priority: self.priority.unwrap_or_default(),
             sla_id: self.sla_id,
-            status: self.status.unwrap_or(IssueStatus::default()),
-            agreement_status: self.agreement_status.unwrap_or(AgreementStatus::default()),
+            status: self.status.unwrap_or_default(),
+            agreement_status: self.agreement_status.unwrap_or_default(),
             opened_at,
             response_by: self.response_by,
             resolution_by: self.resolution_by,

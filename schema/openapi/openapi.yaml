@@ -1799,7 +1799,7 @@ components:
         - company_id
         - name
         - is_default
-        - is_active
+        - status
         - metadata
       properties:
         id:
@@ -1813,8 +1813,8 @@ components:
           maxLength: 140
         is_default:
           type: boolean
-        is_active:
-          type: boolean
+        status:
+          type: string
         metadata:
           type: object
 
@@ -1837,7 +1837,7 @@ components:
         - company_id
         - name
         - is_default
-        - is_active
+        - status
         - metadata
       properties:
         company_id:
@@ -1848,8 +1848,8 @@ components:
           maxLength: 140
         is_default:
           type: boolean
-        is_active:
-          type: boolean
+        status:
+          type: string
         metadata:
           type: object
 
@@ -1859,7 +1859,7 @@ components:
         - company_id
         - name
         - is_default
-        - is_active
+        - status
         - metadata
       properties:
         company_id:
@@ -1870,8 +1870,8 @@ components:
           maxLength: 140
         is_default:
           type: boolean
-        is_active:
-          type: boolean
+        status:
+          type: string
         metadata:
           type: object
 
@@ -1886,8 +1886,8 @@ components:
           maxLength: 140
         is_default:
           type: boolean
-        is_active:
-          type: boolean
+        status:
+          type: string
         metadata:
           type: object
 

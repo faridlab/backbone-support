@@ -63,7 +63,7 @@ pub struct ServiceLevelPriority {
 impl ServiceLevelPriority {
     /// Create a builder for ServiceLevelPriority
     pub fn builder() -> ServiceLevelPriorityBuilder {
-        ServiceLevelPriorityBuilder::default()
+        <ServiceLevelPriorityBuilder as Default>::default()
     }
 
     /// Create a new ServiceLevelPriority with required fields

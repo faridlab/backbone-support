@@ -8,6 +8,7 @@ pub mod service_level_priority;
 pub mod warranty_claim;
 pub mod issue_status;
 pub mod agreement_status;
+pub mod service_level_agreement_status;
 pub mod issue_priority;
 pub mod warranty_status;
 
@@ -26,6 +27,7 @@ pub use warranty_claim::WarrantyClaimBuilder;
 pub use warranty_claim::WarrantyClaimId;
 pub use issue_status::IssueStatus;
 pub use agreement_status::AgreementStatus;
+pub use service_level_agreement_status::ServiceLevelAgreementStatus;
 pub use issue_priority::IssuePriority;
 pub use warranty_status::WarrantyStatus;
 

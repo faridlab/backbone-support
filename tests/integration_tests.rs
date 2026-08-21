@@ -65,4 +65,3 @@ async fn test_warranty_claim_api() {
         panic!("{} tests failed", failed.len());
     }
 }
-

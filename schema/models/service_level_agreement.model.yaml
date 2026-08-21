@@ -28,17 +28,18 @@ models:
         type: boolean
         attributes: ["@default(false)"]
         description: "Applied to an issue that names no SLA (at most one default per company)"
-      is_active:
-        type: boolean
-        attributes: ["@default(true)"]
-        description: "Whether new issues can bind to this SLA"
+      # replaces is_active (boolean flipped to lifecycle enum)
+      status:
+        type: ServiceLevelAgreementStatus
+        attributes: ["@default(active)"]
+        description: "Lifecycle (only an active SLA can be bound to new issues)"
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]
         description: "Audit metadata"
     indexes:
       - type: index
-        fields: [company_id, is_active]
+        fields: [company_id, status]
 
   - name: ServiceLevelPriority
     collection: service_level_priorities
@@ -77,6 +78,15 @@ models:
         fields: [sla_id, priority]
 
 enums:
+  - name: ServiceLevelAgreementStatus
+    description: "Lifecycle of a support SLA"
+    variants:
+      - name: active
+        description: "New issues can bind to this SLA"
+        default: true
+      - name: inactive
+        description: "Retired SLA; bound issues keep their snapshotted targets"
+
   - name: IssuePriority
     description: "Support ticket priority — selects the SLA target row"
     variants:

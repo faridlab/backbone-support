@@ -61,8 +61,8 @@ impl ServiceLevelAgreementRepository {
         s: &NewSlaRow<'_>,
     ) -> Result<(), sqlx::Error> {
         sqlx::query(
-            r#"INSERT INTO support.service_level_agreements (id, company_id, name, is_default, is_active)
-               VALUES ($1,$2,$3,$4,true)"#,
+            r#"INSERT INTO support.service_level_agreements (id, company_id, name, is_default, status)
+               VALUES ($1,$2,$3,$4,'active')"#,
         )
         .bind(s.id).bind(s.company_id).bind(s.name).bind(s.is_default)
         .execute(conn)
@@ -85,7 +85,7 @@ impl ServiceLevelAgreementRepository {
             pool,
             sqlx::query_scalar(
                 r#"SELECT id FROM support.service_level_agreements
-                   WHERE company_id=$1 AND is_default=true AND is_active=true
+                   WHERE company_id=$1 AND is_default=true AND status='active'
                      AND (metadata->>'deleted_at') IS NULL LIMIT 1"#,
             )
             .bind(company_id),

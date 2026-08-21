@@ -186,4 +186,3 @@ pub fn create_protected_issue_routes<A: AuthMiddleware + Send + Sync + 'static>(
             }
         }))
 }
-
