@@ -12,6 +12,16 @@
 module: support
 version: 2
 schema: support
+
+# ADR-0014 company fence: every support-module table is company-private and fenced
+# strict — a denormalized company_id column with a direct equality policy on
+# `app.company_id`. The policies already ship in migrations
+# 20260426220005_enable_company_rls (issues, service_level_agreements,
+# warranty_claims) and 20260722000001_fence_service_level_priorities_company_rls
+# (service_level_priorities); the module-local outbox mirror is fenced in
+# 20260726100000_fence_outbox_company_id with the cross-tenant relay-drain
+# exception. No shared_blank or shared_tree entity exists here.
+company_fence: strict
 description: "support domain module"
 
 config:
