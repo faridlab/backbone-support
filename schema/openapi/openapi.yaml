@@ -1491,7 +1491,6 @@ components:
       type: object
       required:
         - id
-        - company_id
         - subject
         - priority
         - status
@@ -1502,9 +1501,6 @@ components:
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         customer_id:
@@ -1579,7 +1575,6 @@ components:
     CreateIssueRequest:
       type: object
       required:
-        - company_id
         - subject
         - priority
         - status
@@ -1589,9 +1584,6 @@ components:
         - total_paused_mins
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         customer_id:
           nullable: true
           type: string
@@ -1651,7 +1643,6 @@ components:
     UpdateIssueRequest:
       type: object
       required:
-        - company_id
         - subject
         - priority
         - status
@@ -1661,9 +1652,6 @@ components:
         - total_paused_mins
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         customer_id:
           nullable: true
           type: string
@@ -1723,9 +1711,6 @@ components:
     PatchIssueRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         customer_id:
           nullable: true
           type: string
@@ -1796,16 +1781,12 @@ components:
       type: object
       required:
         - id
-        - company_id
         - name
         - is_default
         - status
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         name:
@@ -1834,15 +1815,11 @@ components:
     CreateServiceLevelAgreementRequest:
       type: object
       required:
-        - company_id
         - name
         - is_default
         - status
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 140
@@ -1856,15 +1833,11 @@ components:
     UpdateServiceLevelAgreementRequest:
       type: object
       required:
-        - company_id
         - name
         - is_default
         - status
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 140
@@ -1878,9 +1851,6 @@ components:
     PatchServiceLevelAgreementRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 140
@@ -1906,7 +1876,6 @@ components:
       required:
         - id
         - sla_id
-        - company_id
         - priority
         - response_time_mins
         - resolution_time_mins
@@ -1916,9 +1885,6 @@ components:
           type: string
           format: uuid
         sla_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         priority:
@@ -1949,16 +1915,12 @@ components:
       type: object
       required:
         - sla_id
-        - company_id
         - priority
         - response_time_mins
         - resolution_time_mins
         - metadata
       properties:
         sla_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         priority:
@@ -1976,16 +1938,12 @@ components:
       type: object
       required:
         - sla_id
-        - company_id
         - priority
         - response_time_mins
         - resolution_time_mins
         - metadata
       properties:
         sla_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         priority:
@@ -2003,9 +1961,6 @@ components:
       type: object
       properties:
         sla_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         priority:
@@ -2033,7 +1988,6 @@ components:
       type: object
       required:
         - id
-        - company_id
         - item_id
         - claim_date
         - is_under_warranty
@@ -2041,9 +1995,6 @@ components:
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         customer_id:
@@ -2099,16 +2050,12 @@ components:
     CreateWarrantyClaimRequest:
       type: object
       required:
-        - company_id
         - item_id
         - claim_date
         - is_under_warranty
         - status
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         customer_id:
           nullable: true
           type: string
@@ -2149,16 +2096,12 @@ components:
     UpdateWarrantyClaimRequest:
       type: object
       required:
-        - company_id
         - item_id
         - claim_date
         - is_under_warranty
         - status
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         customer_id:
           nullable: true
           type: string
@@ -2199,9 +2142,6 @@ components:
     PatchWarrantyClaimRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         customer_id:
           nullable: true
           type: string

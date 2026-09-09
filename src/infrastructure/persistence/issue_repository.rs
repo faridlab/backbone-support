@@ -5,6 +5,10 @@
 //! below are the home for every hand-written Issue SQL statement — the SLA clock's transitions
 //! (4-layer rule: services orchestrate and own the unit of work, repositories hold the SQL).
 //!
+//! Tenancy (ADR-0029): the SQL here carries no tenant key. The scoped-execute helpers ride the
+//! request-dedicated connection when the composing service bound one (its fence variables govern
+//! what the RLS layer accepts) and fall back to a plain pool execute otherwise.
+//!
 //! Thin newtype over `backbone_orm::GenericCrudRepository<Issue, backbone_orm::SoftDelete>`.
 //! All standard CRUD methods are available via `Deref`.
 
@@ -13,7 +17,7 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+use backbone_orm::org_scope;
 
 use crate::domain::entity::Issue;
 
@@ -24,13 +28,13 @@ pub const TABLE_NAME: &str = "support.issues";
 ///
 /// All standard CRUD, soft-delete, pagination, and bulk methods are
 /// provided automatically via `Deref` to `backbone_orm::GenericCrudRepository`.
-pub struct IssueRepository(
-    backbone_orm::GenericCrudRepository<Issue, backbone_orm::SoftDelete>,
-);
+pub struct IssueRepository(backbone_orm::GenericCrudRepository<Issue, backbone_orm::SoftDelete>);
 
 impl std::ops::Deref for IssueRepository {
     type Target = backbone_orm::GenericCrudRepository<Issue, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl IssueRepository {
@@ -43,11 +47,10 @@ impl IssueRepository {
 /// The exact row a raised ticket writes.
 ///
 /// Mirrors the raw column shape rather than the `Issue` entity: `priority` is carried as a free string
-/// and cast at the DB (`$6::issue_priority`), so a bad priority fails as a DB error rather than a
+/// and cast at the DB (`$5::issue_priority`), so a bad priority fails as a DB error rather than a
 /// deserialize panic. The deadlines are already snapshotted by the caller.
 pub struct NewIssueRow<'a> {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub subject: &'a str,
     pub description: Option<&'a str>,
@@ -65,16 +68,15 @@ pub struct PausedIssueRow {
     pub first_responded_at: Option<DateTime<Utc>>,
 }
 
-/// The pre-flight projection for resolve/escalate: the issue's owning company and its live status.
+/// The pre-flight projection for resolve: the issue's live status (for the friendly
+/// on_hold/not-found errors — the SLA verdict itself is judged in `resolve`'s own UPDATE).
 pub struct IssueStateRow {
-    pub company_id: Uuid,
     pub status: String,
 }
 
-/// The escalation candidate's projection — the company to bind, the customer the project opens for, and
-/// the once-only gate (`escalated_project_id`).
+/// The escalation candidate's projection — the customer the project opens for and the once-only
+/// gate (`escalated_project_id`).
 pub struct EscalationCandidateRow {
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub subject: String,
     pub status: String,
@@ -86,21 +88,32 @@ pub struct EscalationCandidateRow {
 impl IssueRepository {
     /// Insert a raised ticket with its snapshotted deadlines.
     ///
-    /// A write outside any transaction: takes the pool and runs `execute_scoped` so the RLS fence
-    /// (ADR-0008) applies. The caller wraps this in `with_company_scope(Some(company))` — the company is
-    /// on the DTO, and that scope is what satisfies the INSERT's WITH CHECK fence.
-    pub async fn insert_issue(&self, pool: &PgPool, i: &NewIssueRow<'_>) -> Result<(), sqlx::Error> {
-        company_scope::execute_scoped(
+    /// A write outside any transaction: takes the pool and runs the scoped helper so it rides the
+    /// request-dedicated connection when the composing service bound a scope — under a decorated
+    /// deployment the fence's WITH CHECK governs the row; with no scope bound this is a plain insert.
+    pub async fn insert_issue(
+        &self,
+        pool: &PgPool,
+        i: &NewIssueRow<'_>,
+    ) -> Result<(), sqlx::Error> {
+        org_scope::execute_scoped(
             pool,
             sqlx::query(
                 r#"INSERT INTO support.issues
-                     (id, company_id, customer_id, subject, description, priority, sla_id, status,
+                     (id, customer_id, subject, description, priority, sla_id, status,
                       agreement_status, opened_at, response_by, resolution_by, total_paused_mins)
-                   VALUES ($1,$2,$3,$4,$5,$6::issue_priority,$7,'open'::issue_status,
-                           'first_response_due'::agreement_status,$8,$9,$10,0)"#,
+                   VALUES ($1,$2,$3,$4,$5::issue_priority,$6,'open'::issue_status,
+                           'first_response_due'::agreement_status,$7,$8,$9,0)"#,
             )
-            .bind(i.id).bind(i.company_id).bind(i.customer_id).bind(i.subject).bind(i.description)
-            .bind(i.priority).bind(i.sla_id).bind(i.opened_at).bind(i.response_by).bind(i.resolution_by),
+            .bind(i.id)
+            .bind(i.customer_id)
+            .bind(i.subject)
+            .bind(i.description)
+            .bind(i.priority)
+            .bind(i.sla_id)
+            .bind(i.opened_at)
+            .bind(i.response_by)
+            .bind(i.resolution_by),
         )
         .await?;
         Ok(())
@@ -110,16 +123,16 @@ impl IssueRepository {
     /// live (pause-adjusted) `response_by` — never a stale read. Returns rows affected (0 = the issue is
     /// not awaiting a first response).
     ///
-    /// ID-only: no company argument. Runs `execute_scoped`, so it rides a connection carrying the
-    /// caller's `app.company_id` and another company's issue simply is not updated. A non-request caller
-    /// (event/job) must wrap this in `with_company_scope(Some(company_id))` or it fails closed.
+    /// ID-only: rides the request-dedicated connection when the composing service bound a scope, so a
+    /// row the deployment's fence excludes is simply not updated; with no scope bound this is a plain
+    /// update.
     pub async fn record_first_response(
         &self,
         pool: &PgPool,
         issue_id: Uuid,
         now: DateTime<Utc>,
     ) -> Result<u64, sqlx::Error> {
-        let moved = company_scope::execute_scoped(
+        let moved = org_scope::execute_scoped(
             pool,
             sqlx::query(
                 r#"UPDATE support.issues
@@ -136,11 +149,14 @@ impl IssueRepository {
         Ok(moved.rows_affected())
     }
 
-    /// Stop the SLA clock. Returns rows affected (0 = not an open/replied issue in scope).
-    ///
-    /// ID-only, `execute_scoped` — same caller-must-wrap contract as `record_first_response`.
-    pub async fn pause(&self, pool: &PgPool, issue_id: Uuid, now: DateTime<Utc>) -> Result<u64, sqlx::Error> {
-        let moved = company_scope::execute_scoped(
+    /// Stop the SLA clock. Returns rows affected (0 = not an open/replied issue).
+    pub async fn pause(
+        &self,
+        pool: &PgPool,
+        issue_id: Uuid,
+        now: DateTime<Utc>,
+    ) -> Result<u64, sqlx::Error> {
+        let moved = org_scope::execute_scoped(
             pool,
             sqlx::query(
                 r#"UPDATE support.issues
@@ -156,8 +172,8 @@ impl IssueRepository {
     /// Lock the on-hold row and read what the resume math needs. `Ok(None)` = the issue is not on hold.
     ///
     /// Takes the CALLER'S connection: this `FOR UPDATE` read and the deadline extension that follows are
-    /// one unit of work, and the lock must be held across both. The caller has already bound the company
-    /// on that connection — don't re-bind here.
+    /// one unit of work, and the lock must be held across both. The caller has already relayed the
+    /// ambient org scope onto that connection — don't re-bind here.
     pub async fn lock_on_hold(
         &self,
         conn: &mut sqlx::PgConnection,
@@ -203,23 +219,25 @@ impl IssueRepository {
         Ok(())
     }
 
-    /// Read an issue's company + live status. Only for the caller's friendly on_hold/not-found errors
-    /// and to learn the company to bind — the SLA verdict is NOT computed from this snapshot (see
-    /// `resolve`).
-    ///
-    /// ID-only read: `fetch_optional_row_scoped` fences it to the caller's `app.company_id`, so another
-    /// company's issue is simply not found.
-    pub async fn find_state(&self, pool: &PgPool, issue_id: Uuid) -> Result<Option<IssueStateRow>, sqlx::Error> {
-        let row = company_scope::fetch_optional_row_scoped(
+    /// Read an issue's live status. Only for the caller's friendly on_hold/not-found errors — the
+    /// SLA verdict is NOT computed from this snapshot (see `resolve`).
+    pub async fn find_state(
+        &self,
+        pool: &PgPool,
+        issue_id: Uuid,
+    ) -> Result<Option<IssueStateRow>, sqlx::Error> {
+        let row = org_scope::fetch_optional_row_scoped(
             pool,
             sqlx::query(
-                r#"SELECT company_id, status::text AS status, resolution_by FROM support.issues
+                r#"SELECT status::text AS status FROM support.issues
                    WHERE id=$1 AND (metadata->>'deleted_at') IS NULL"#,
             )
             .bind(issue_id),
         )
         .await?;
-        Ok(row.map(|r| IssueStateRow { company_id: r.get("company_id"), status: r.get("status") }))
+        Ok(row.map(|r| IssueStateRow {
+            status: r.get("status"),
+        }))
     }
 
     /// Resolve a ticket and judge the SLA IN THE SAME gated UPDATE, from the row's LIVE `resolution_by`.
@@ -233,17 +251,13 @@ impl IssueRepository {
     /// response leg is not breached — either an already-recorded on-time response, or (none recorded
     /// yet) resolving within `response_by` counts as responding in time (completeness council
     /// 2026-07-07).
-    ///
-    /// Takes the pool and runs `fetch_optional_row_scoped`; the caller wraps this in
-    /// `with_company_scope(Some(company_id))` using the company read off the row, so the write is fenced
-    /// for non-request callers (jobs, event subscribers) too — not only under an ambient request scope.
     pub async fn resolve(
         &self,
         pool: &PgPool,
         issue_id: Uuid,
         now: DateTime<Utc>,
     ) -> Result<Option<bool>, sqlx::Error> {
-        let row = company_scope::fetch_optional_row_scoped(
+        let row = org_scope::fetch_optional_row_scoped(
             pool,
             sqlx::query(
                 r#"UPDATE support.issues
@@ -263,11 +277,9 @@ impl IssueRepository {
         Ok(row.map(|r| r.get("fulfilled")))
     }
 
-    /// Close a resolved ticket (terminal). Returns rows affected (0 = not a resolved issue in scope).
-    ///
-    /// ID-only, `execute_scoped` — same caller-must-wrap contract as `record_first_response`.
+    /// Close a resolved ticket (terminal). Returns rows affected (0 = not a resolved issue).
     pub async fn close(&self, pool: &PgPool, issue_id: Uuid) -> Result<u64, sqlx::Error> {
-        let moved = company_scope::execute_scoped(
+        let moved = org_scope::execute_scoped(
             pool,
             sqlx::query(
                 r#"UPDATE support.issues SET status='closed'::issue_status
@@ -280,25 +292,21 @@ impl IssueRepository {
     }
 
     /// Read what the escalation decision needs, including the once-only gate.
-    ///
-    /// ID-only read — `fetch_optional_row_scoped` fences it to the caller's `app.company_id`. The
-    /// company on the returned row is what the caller binds explicitly onto the escalation transaction.
     pub async fn find_escalation_candidate(
         &self,
         pool: &PgPool,
         issue_id: Uuid,
     ) -> Result<Option<EscalationCandidateRow>, sqlx::Error> {
-        let row = company_scope::fetch_optional_row_scoped(
+        let row = org_scope::fetch_optional_row_scoped(
             pool,
             sqlx::query(
-                r#"SELECT company_id, customer_id, subject, status::text AS status, escalated_project_id
+                r#"SELECT customer_id, subject, status::text AS status, escalated_project_id
                    FROM support.issues WHERE id=$1 AND (metadata->>'deleted_at') IS NULL"#,
             )
             .bind(issue_id),
         )
         .await?;
         Ok(row.map(|r| EscalationCandidateRow {
-            company_id: r.get("company_id"),
             customer_id: r.get("customer_id"),
             subject: r.get("subject"),
             status: r.get("status"),
@@ -311,7 +319,7 @@ impl IssueRepository {
     ///
     /// Takes the CALLER'S connection so the claim and the outbox stage commit as one unit — backbone-project
     /// subscribes to IssueEscalated, so a crash between the CAS and the publish must not drop it. The
-    /// caller binds the company on that connection — don't re-bind here.
+    /// caller has already relayed the ambient org scope onto that connection — don't re-bind here.
     pub async fn claim_escalation(
         &self,
         conn: &mut sqlx::PgConnection,
@@ -322,7 +330,8 @@ impl IssueRepository {
             r#"UPDATE support.issues SET escalated_project_id=$2
                WHERE id=$1 AND escalated_project_id IS NULL"#,
         )
-        .bind(issue_id).bind(project_id)
+        .bind(issue_id)
+        .bind(project_id)
         .execute(conn)
         .await?;
         Ok(moved.rows_affected())
@@ -330,15 +339,21 @@ impl IssueRepository {
 
     /// Re-read the winner's project id after a losing escalation CAS.
     ///
-    /// A read outside the (rolled-back) transaction: `fetch_one_scalar_scoped` applies the RLS fence.
-    /// The caller wraps this in `with_company_scope(Some(company_id))`.
-    pub async fn fetch_escalated_project_id(&self, pool: &PgPool, issue_id: Uuid) -> Result<Uuid, sqlx::Error> {
-        company_scope::fetch_one_scalar_scoped(
+    /// A read outside the (rolled-back) transaction: rides the request-dedicated connection when the
+    /// composing service bound a scope, plain pool otherwise.
+    pub async fn fetch_escalated_project_id(
+        &self,
+        pool: &PgPool,
+        issue_id: Uuid,
+    ) -> Result<Uuid, sqlx::Error> {
+        let row = org_scope::fetch_optional_row_scoped(
             pool,
-            sqlx::query_scalar("SELECT escalated_project_id FROM support.issues WHERE id=$1")
+            sqlx::query("SELECT escalated_project_id FROM support.issues WHERE id=$1")
                 .bind(issue_id),
         )
-        .await
+        .await?;
+        row.map(|r| r.get::<Uuid, _>("escalated_project_id"))
+            .ok_or(sqlx::Error::RowNotFound)
     }
 }
 

@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<Issue>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
-use backbone_core::{NonNegative, OptionalNotBlank, RequiredString};
 use crate::domain::entity::Issue;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{NonNegative, OptionalNotBlank, RequiredString};
 
 /// Validator type alias for Issue entities.
 pub type IssueValidator = EntityValidator<Issue>;
@@ -16,8 +16,12 @@ pub type IssueValidator = EntityValidator<Issue>;
 pub fn issue_validator() -> IssueValidator {
     EntityValidator::new()
         .rule(RequiredString::new("subject", |e: &Issue| &e.subject))
-        .rule(OptionalNotBlank::new("description", |e: &Issue| e.description.as_deref()))
-        .rule(NonNegative::new("total_paused_mins", |e: &Issue| e.total_paused_mins as i64))
+        .rule(OptionalNotBlank::new("description", |e: &Issue| {
+            e.description.as_deref()
+        }))
+        .rule(NonNegative::new("total_paused_mins", |e: &Issue| {
+            e.total_paused_mins as i64
+        }))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

@@ -5,11 +5,11 @@
 //! This trait defines the repository contract for the ServiceLevelPriority aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::domain::entity::{ServiceLevelPriority, IssuePriority};
+use crate::domain::entity::{IssuePriority, ServiceLevelPriority};
 
 /// Pagination parameters for list queries
 #[derive(Debug, Clone, Default)]
@@ -45,14 +45,13 @@ pub struct ServiceLevelPriorityPaginatedResult {
 #[derive(Debug, Clone, Default)]
 pub struct ServiceLevelPriorityFilter {
     pub sla_id: Option<Uuid>,
-    pub company_id: Option<Uuid>,
     pub priority: Option<IssuePriority>,
 }
 
 impl ServiceLevelPriorityFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.sla_id.is_some() || self.company_id.is_some() || self.priority.is_some()
+        self.sla_id.is_some() || self.priority.is_some()
     }
 }
 
@@ -62,7 +61,6 @@ impl ServiceLevelPriorityFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ServiceLevelPriorityRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -77,7 +75,11 @@ pub trait ServiceLevelPriorityRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<ServiceLevelPriority>>;
 
     /// Update service_level_priority by ID
-    async fn update(&self, id: &str, entity: &ServiceLevelPriority) -> Result<Option<ServiceLevelPriority>>;
+    async fn update(
+        &self,
+        id: &str,
+        entity: &ServiceLevelPriority,
+    ) -> Result<Option<ServiceLevelPriority>>;
 
     /// Delete service_level_priority by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -87,10 +89,17 @@ pub trait ServiceLevelPriorityRepository: Send + Sync {
     // =========================================================================
 
     /// List service_level_priority with pagination
-    async fn list(&self, params: ServiceLevelPriorityPaginationParams) -> Result<ServiceLevelPriorityPaginatedResult>;
+    async fn list(
+        &self,
+        params: ServiceLevelPriorityPaginationParams,
+    ) -> Result<ServiceLevelPriorityPaginatedResult>;
 
     /// List service_level_priority with pagination and filters
-    async fn list_with_filters(&self, params: ServiceLevelPriorityPaginationParams, filters: ServiceLevelPriorityFilter) -> Result<ServiceLevelPriorityPaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: ServiceLevelPriorityPaginationParams,
+        filters: ServiceLevelPriorityFilter,
+    ) -> Result<ServiceLevelPriorityPaginatedResult>;
 
     /// Count all service_level_priority entities
     async fn count(&self) -> Result<u64>;
@@ -112,7 +121,10 @@ pub trait ServiceLevelPriorityRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ServiceLevelPriority>>;
 
     /// List soft-deleted service_level_priority entities
-    async fn list_deleted(&self, params: ServiceLevelPriorityPaginationParams) -> Result<ServiceLevelPriorityPaginatedResult>;
+    async fn list_deleted(
+        &self,
+        params: ServiceLevelPriorityPaginationParams,
+    ) -> Result<ServiceLevelPriorityPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;
@@ -122,7 +134,10 @@ pub trait ServiceLevelPriorityRepository: Send + Sync {
     // =========================================================================
 
     /// Bulk save service_level_priority entities
-    async fn bulk_save(&self, entities: &[ServiceLevelPriority]) -> Result<Vec<ServiceLevelPriority>>;
+    async fn bulk_save(
+        &self,
+        entities: &[ServiceLevelPriority],
+    ) -> Result<Vec<ServiceLevelPriority>>;
 
     /// Bulk delete by IDs
     async fn bulk_delete(&self, ids: &[&str]) -> Result<u64>;

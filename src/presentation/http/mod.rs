@@ -14,9 +14,18 @@ pub mod warranty_claim_handler;
 // END CUSTOM
 
 // Re-exports
-pub use issue_handler::{create_issue_routes, create_issue_read_routes, create_issue_write_routes};
-pub use service_level_agreement_handler::{create_service_level_agreement_routes, create_service_level_agreement_read_routes, create_service_level_agreement_write_routes};
-pub use service_level_priority_handler::{create_service_level_priority_routes, create_service_level_priority_read_routes, create_service_level_priority_write_routes};
-pub use warranty_claim_handler::{create_warranty_claim_routes, create_warranty_claim_read_routes, create_warranty_claim_write_routes};
+pub use issue_handler::{create_issue_read_routes, create_issue_routes, create_issue_write_routes};
+pub use service_level_agreement_handler::{
+    create_service_level_agreement_read_routes, create_service_level_agreement_routes,
+    create_service_level_agreement_write_routes,
+};
+pub use service_level_priority_handler::{
+    create_service_level_priority_read_routes, create_service_level_priority_routes,
+    create_service_level_priority_write_routes,
+};
+pub use warranty_claim_handler::{
+    create_warranty_claim_read_routes, create_warranty_claim_routes,
+    create_warranty_claim_write_routes,
+};
 // <<< CUSTOM
 // END CUSTOM

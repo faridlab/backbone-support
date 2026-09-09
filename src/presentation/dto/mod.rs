@@ -12,36 +12,22 @@ pub mod warranty_claim_dto;
 
 // Re-exports
 pub use issue_dto::{
-    CreateIssueDto,
+    CreateIssueDto, IssueListResponseDto, IssueResponseDto, IssueSummaryDto, PatchIssueDto,
     UpdateIssueDto,
-    PatchIssueDto,
-    IssueResponseDto,
-    IssueListResponseDto,
-    IssueSummaryDto,
 };
 pub use service_level_agreement_dto::{
-    CreateServiceLevelAgreementDto,
-    UpdateServiceLevelAgreementDto,
-    PatchServiceLevelAgreementDto,
-    ServiceLevelAgreementResponseDto,
-    ServiceLevelAgreementListResponseDto,
-    ServiceLevelAgreementSummaryDto,
+    CreateServiceLevelAgreementDto, PatchServiceLevelAgreementDto,
+    ServiceLevelAgreementListResponseDto, ServiceLevelAgreementResponseDto,
+    ServiceLevelAgreementSummaryDto, UpdateServiceLevelAgreementDto,
 };
 pub use service_level_priority_dto::{
-    CreateServiceLevelPriorityDto,
-    UpdateServiceLevelPriorityDto,
-    PatchServiceLevelPriorityDto,
-    ServiceLevelPriorityResponseDto,
-    ServiceLevelPriorityListResponseDto,
-    ServiceLevelPrioritySummaryDto,
+    CreateServiceLevelPriorityDto, PatchServiceLevelPriorityDto,
+    ServiceLevelPriorityListResponseDto, ServiceLevelPriorityResponseDto,
+    ServiceLevelPrioritySummaryDto, UpdateServiceLevelPriorityDto,
 };
 pub use warranty_claim_dto::{
-    CreateWarrantyClaimDto,
-    UpdateWarrantyClaimDto,
-    PatchWarrantyClaimDto,
-    WarrantyClaimResponseDto,
-    WarrantyClaimListResponseDto,
-    WarrantyClaimSummaryDto,
+    CreateWarrantyClaimDto, PatchWarrantyClaimDto, UpdateWarrantyClaimDto,
+    WarrantyClaimListResponseDto, WarrantyClaimResponseDto, WarrantyClaimSummaryDto,
 };
 
 // Common pagination types
@@ -67,8 +53,12 @@ pub struct PaginationParams {
     pub sort_order: Option<String>,
 }
 
-fn default_page() -> u32 { 1 }
-fn default_per_page() -> u32 { 20 }
+fn default_page() -> u32 {
+    1
+}
+fn default_per_page() -> u32 {
+    20
+}
 
 /// API response wrapper
 #[derive(Debug, Clone, Serialize)]
@@ -93,7 +83,11 @@ pub struct ApiError {
 
 impl<T> ApiResponse<T> {
     pub fn ok(data: T) -> Self {
-        Self { success: true, data: Some(data), error: None }
+        Self {
+            success: true,
+            data: Some(data),
+            error: None,
+        }
     }
 
     pub fn err(code: impl Into<String>, message: impl Into<String>) -> Self {

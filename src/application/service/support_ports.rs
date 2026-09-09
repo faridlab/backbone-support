@@ -8,6 +8,11 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Escalate a support ticket into a delivery project (open a backbone-project Project for the customer).
+///
+/// `company_id` is the SIBLING's domain key (backbone-project is not tenant-agnostic; its
+/// Project rows carry the legacy owner-company — composition-installed tenancy, ADR-0029).
+/// Support neither stores nor fences on it: the write path sources it from the ambient org
+/// scope and fails closed when the request carries no company-anchored scope.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ProjectFromIssue {
     pub company_id: Uuid,

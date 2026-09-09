@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::IssuePriority;
-use super::IssueStatus;
 use super::AgreementStatus;
 use super::AuditMetadata;
+use super::IssuePriority;
+use super::IssueStatus;
 
 /// Strongly-typed ID for Issue
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -14,9 +14,15 @@ use super::AuditMetadata;
 pub struct IssueId(pub Uuid);
 
 impl IssueId {
-    pub fn new(id: Uuid) -> Self { Self(id) }
-    pub fn generate() -> Self { Self(Uuid::new_v4()) }
-    pub fn into_inner(self) -> Uuid { self.0 }
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
 }
 
 impl std::fmt::Display for IssueId {
@@ -33,26 +39,33 @@ impl std::str::FromStr for IssueId {
 }
 
 impl From<Uuid> for IssueId {
-    fn from(id: Uuid) -> Self { Self(id) }
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
 }
 
 impl From<IssueId> for Uuid {
-    fn from(id: IssueId) -> Self { id.0 }
+    fn from(id: IssueId) -> Self {
+        id.0
+    }
 }
 
 impl AsRef<Uuid> for IssueId {
-    fn as_ref(&self) -> &Uuid { &self.0 }
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
 }
 
 impl std::ops::Deref for IssueId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Issue {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub subject: String,
     pub description: Option<String>,
@@ -81,10 +94,17 @@ impl Issue {
     }
 
     /// Create a new Issue with required fields
-    pub fn new(company_id: Uuid, subject: String, priority: IssuePriority, status: IssueStatus, agreement_status: AgreementStatus, opened_at: DateTime<Utc>, response_breached: bool, total_paused_mins: i32) -> Self {
+    pub fn new(
+        subject: String,
+        priority: IssuePriority,
+        status: IssueStatus,
+        agreement_status: AgreementStatus,
+        opened_at: DateTime<Utc>,
+        response_breached: bool,
+        total_paused_mins: i32,
+    ) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id,
             customer_id: None,
             subject,
             description: None,
@@ -160,7 +180,6 @@ impl Issue {
         &self.status
     }
 
-
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -227,56 +246,85 @@ impl Issue {
     pub fn apply_patch(&mut self, fields: std::collections::HashMap<String, serde_json::Value>) {
         for (key, value) in fields {
             match key.as_str() {
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.company_id = v; }
-                }
                 "customer_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.customer_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.customer_id = v;
+                    }
                 }
                 "subject" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.subject = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.subject = v;
+                    }
                 }
                 "description" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.description = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.description = v;
+                    }
                 }
                 "priority" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.priority = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.priority = v;
+                    }
                 }
                 "sla_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.sla_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.sla_id = v;
+                    }
                 }
                 "status" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.status = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.status = v;
+                    }
                 }
                 "agreement_status" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.agreement_status = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.agreement_status = v;
+                    }
                 }
                 "opened_at" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.opened_at = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.opened_at = v;
+                    }
                 }
                 "response_by" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.response_by = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.response_by = v;
+                    }
                 }
                 "resolution_by" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.resolution_by = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.resolution_by = v;
+                    }
                 }
                 "first_responded_at" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.first_responded_at = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.first_responded_at = v;
+                    }
                 }
                 "response_breached" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.response_breached = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.response_breached = v;
+                    }
                 }
                 "resolved_at" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.resolved_at = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.resolved_at = v;
+                    }
                 }
                 "paused_at" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.paused_at = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.paused_at = v;
+                    }
                 }
                 "total_paused_mins" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.total_paused_mins = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.total_paused_mins = v;
+                    }
                 }
                 "escalated_project_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.escalated_project_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.escalated_project_id = v;
+                    }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -332,20 +380,19 @@ impl backbone_orm::EntityRepoMeta for Issue {
     fn column_types() -> std::collections::HashMap<String, String> {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("customer_id".to_string(), "uuid".to_string());
         m.insert("sla_id".to_string(), "uuid".to_string());
         m.insert("escalated_project_id".to_string(), "uuid".to_string());
         m.insert("priority".to_string(), "issue_priority".to_string());
         m.insert("status".to_string(), "issue_status".to_string());
-        m.insert("agreement_status".to_string(), "agreement_status".to_string());
+        m.insert(
+            "agreement_status".to_string(),
+            "agreement_status".to_string(),
+        );
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &["subject"]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -355,7 +402,6 @@ impl backbone_orm::EntityRepoMeta for Issue {
 /// System fields (id, metadata, timestamps) are auto-initialized.
 #[derive(Debug, Clone, Default)]
 pub struct IssueBuilder {
-    company_id: Option<Uuid>,
     customer_id: Option<Uuid>,
     subject: Option<String>,
     description: Option<String>,
@@ -375,12 +421,6 @@ pub struct IssueBuilder {
 }
 
 impl IssueBuilder {
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Set the customer_id field (optional)
     pub fn customer_id(mut self, value: Uuid) -> Self {
         self.customer_id = Some(value);
@@ -481,13 +521,15 @@ impl IssueBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<Issue, String> {
-        let company_id = self.company_id.ok_or_else(|| "company_id is required".to_string())?;
-        let subject = self.subject.ok_or_else(|| "subject is required".to_string())?;
-        let opened_at = self.opened_at.ok_or_else(|| "opened_at is required".to_string())?;
+        let subject = self
+            .subject
+            .ok_or_else(|| "subject is required".to_string())?;
+        let opened_at = self
+            .opened_at
+            .ok_or_else(|| "opened_at is required".to_string())?;
 
         Ok(Issue {
             id: Uuid::new_v4(),
-            company_id,
             customer_id: self.customer_id,
             subject,
             description: self.description,

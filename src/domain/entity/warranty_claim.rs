@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::WarrantyStatus;
 use super::AuditMetadata;
+use super::WarrantyStatus;
 
 /// Strongly-typed ID for WarrantyClaim
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,9 +12,15 @@ use super::AuditMetadata;
 pub struct WarrantyClaimId(pub Uuid);
 
 impl WarrantyClaimId {
-    pub fn new(id: Uuid) -> Self { Self(id) }
-    pub fn generate() -> Self { Self(Uuid::new_v4()) }
-    pub fn into_inner(self) -> Uuid { self.0 }
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
 }
 
 impl std::fmt::Display for WarrantyClaimId {
@@ -31,26 +37,33 @@ impl std::str::FromStr for WarrantyClaimId {
 }
 
 impl From<Uuid> for WarrantyClaimId {
-    fn from(id: Uuid) -> Self { Self(id) }
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
 }
 
 impl From<WarrantyClaimId> for Uuid {
-    fn from(id: WarrantyClaimId) -> Self { id.0 }
+    fn from(id: WarrantyClaimId) -> Self {
+        id.0
+    }
 }
 
 impl AsRef<Uuid> for WarrantyClaimId {
-    fn as_ref(&self) -> &Uuid { &self.0 }
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
 }
 
 impl std::ops::Deref for WarrantyClaimId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct WarrantyClaim {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub item_id: Uuid,
     pub serial_no: Option<String>,
@@ -73,10 +86,14 @@ impl WarrantyClaim {
     }
 
     /// Create a new WarrantyClaim with required fields
-    pub fn new(company_id: Uuid, item_id: Uuid, claim_date: DateTime<Utc>, is_under_warranty: bool, status: WarrantyStatus) -> Self {
+    pub fn new(
+        item_id: Uuid,
+        claim_date: DateTime<Utc>,
+        is_under_warranty: bool,
+        status: WarrantyStatus,
+    ) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id,
             customer_id: None,
             item_id,
             serial_no: None,
@@ -146,7 +163,6 @@ impl WarrantyClaim {
         &self.status
     }
 
-
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -195,38 +211,55 @@ impl WarrantyClaim {
     pub fn apply_patch(&mut self, fields: std::collections::HashMap<String, serde_json::Value>) {
         for (key, value) in fields {
             match key.as_str() {
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.company_id = v; }
-                }
                 "customer_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.customer_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.customer_id = v;
+                    }
                 }
                 "item_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.item_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.item_id = v;
+                    }
                 }
                 "serial_no" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.serial_no = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.serial_no = v;
+                    }
                 }
                 "claim_date" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.claim_date = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.claim_date = v;
+                    }
                 }
                 "warranty_expiry" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.warranty_expiry = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.warranty_expiry = v;
+                    }
                 }
                 "is_under_warranty" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.is_under_warranty = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.is_under_warranty = v;
+                    }
                 }
                 "status" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.status = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.status = v;
+                    }
                 }
                 "issue_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.issue_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.issue_id = v;
+                    }
                 }
                 "description" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.description = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.description = v;
+                    }
                 }
                 "resolution" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.resolution = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.resolution = v;
+                    }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -282,7 +315,6 @@ impl backbone_orm::EntityRepoMeta for WarrantyClaim {
     fn column_types() -> std::collections::HashMap<String, String> {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("customer_id".to_string(), "uuid".to_string());
         m.insert("item_id".to_string(), "uuid".to_string());
         m.insert("issue_id".to_string(), "uuid".to_string());
@@ -292,9 +324,6 @@ impl backbone_orm::EntityRepoMeta for WarrantyClaim {
     fn search_fields() -> &'static [&'static str] {
         &[]
     }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
-    }
 }
 
 /// Builder for WarrantyClaim entity
@@ -303,7 +332,6 @@ impl backbone_orm::EntityRepoMeta for WarrantyClaim {
 /// System fields (id, metadata, timestamps) are auto-initialized.
 #[derive(Debug, Clone, Default)]
 pub struct WarrantyClaimBuilder {
-    company_id: Option<Uuid>,
     customer_id: Option<Uuid>,
     item_id: Option<Uuid>,
     serial_no: Option<String>,
@@ -317,12 +345,6 @@ pub struct WarrantyClaimBuilder {
 }
 
 impl WarrantyClaimBuilder {
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Set the customer_id field (optional)
     pub fn customer_id(mut self, value: Uuid) -> Self {
         self.customer_id = Some(value);
@@ -387,13 +409,15 @@ impl WarrantyClaimBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<WarrantyClaim, String> {
-        let company_id = self.company_id.ok_or_else(|| "company_id is required".to_string())?;
-        let item_id = self.item_id.ok_or_else(|| "item_id is required".to_string())?;
-        let claim_date = self.claim_date.ok_or_else(|| "claim_date is required".to_string())?;
+        let item_id = self
+            .item_id
+            .ok_or_else(|| "item_id is required".to_string())?;
+        let claim_date = self
+            .claim_date
+            .ok_or_else(|| "claim_date is required".to_string())?;
 
         Ok(WarrantyClaim {
             id: Uuid::new_v4(),
-            company_id,
             customer_id: self.customer_id,
             item_id,
             serial_no: self.serial_no,

@@ -5,11 +5,11 @@
 //! This trait defines the repository contract for the Issue aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::domain::entity::{Issue, AgreementStatus, IssuePriority, IssueStatus};
+use crate::domain::entity::{AgreementStatus, Issue, IssuePriority, IssueStatus};
 
 /// Pagination parameters for list queries
 #[derive(Debug, Clone, Default)]
@@ -44,7 +44,6 @@ pub struct IssuePaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct IssueFilter {
-    pub company_id: Option<Uuid>,
     pub customer_id: Option<Uuid>,
     pub subject: Option<String>,
     pub description: Option<String>,
@@ -59,7 +58,15 @@ pub struct IssueFilter {
 impl IssueFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some() || self.customer_id.is_some() || self.subject.is_some() || self.description.is_some() || self.priority.is_some() || self.sla_id.is_some() || self.status.is_some() || self.agreement_status.is_some() || self.response_breached.is_some() || self.escalated_project_id.is_some()
+        self.customer_id.is_some()
+            || self.subject.is_some()
+            || self.description.is_some()
+            || self.priority.is_some()
+            || self.sla_id.is_some()
+            || self.status.is_some()
+            || self.agreement_status.is_some()
+            || self.response_breached.is_some()
+            || self.escalated_project_id.is_some()
     }
 }
 
@@ -69,7 +76,6 @@ impl IssueFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait IssueRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -97,7 +103,11 @@ pub trait IssueRepository: Send + Sync {
     async fn list(&self, params: IssuePaginationParams) -> Result<IssuePaginatedResult>;
 
     /// List issue with pagination and filters
-    async fn list_with_filters(&self, params: IssuePaginationParams, filters: IssueFilter) -> Result<IssuePaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: IssuePaginationParams,
+        filters: IssueFilter,
+    ) -> Result<IssuePaginatedResult>;
 
     /// Count all issue entities
     async fn count(&self) -> Result<u64>;

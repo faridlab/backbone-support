@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::WarrantyClaim;
 use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::WarrantyClaim;
 use crate::domain::entity::WarrantyStatus;
 
 // =============================================================================
@@ -33,12 +33,16 @@ use crate::domain::entity::WarrantyStatus;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateWarrantyClaimDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[serde(default, skip_serializing_if = "Option::is_none", alias = "customer_id")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        alias = "customer_id"
+    )]
     pub customer_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "item_id")]
     pub item_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 140)))]
@@ -47,7 +51,11 @@ pub struct CreateWarrantyClaimDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "claim_date")]
     pub claim_date: DateTime<Utc>,
-    #[serde(default, skip_serializing_if = "Option::is_none", alias = "warranty_expiry")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        alias = "warranty_expiry"
+    )]
     pub warranty_expiry: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_under_warranty")]
@@ -76,12 +84,16 @@ pub struct CreateWarrantyClaimDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateWarrantyClaimDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[serde(default, skip_serializing_if = "Option::is_none", alias = "customer_id")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        alias = "customer_id"
+    )]
     pub customer_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "item_id")]
     pub item_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 140)))]
@@ -90,7 +102,11 @@ pub struct UpdateWarrantyClaimDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "claim_date")]
     pub claim_date: DateTime<Utc>,
-    #[serde(default, skip_serializing_if = "Option::is_none", alias = "warranty_expiry")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        alias = "warranty_expiry"
+    )]
     pub warranty_expiry: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_under_warranty")]
@@ -119,12 +135,12 @@ pub struct UpdateWarrantyClaimDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchWarrantyClaimDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "customer_id")]
     pub customer_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(skip_serializing_if = "Option::is_none", alias = "item_id")]
     pub item_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 140)))]
@@ -153,7 +169,16 @@ pub struct PatchWarrantyClaimDto {
 impl PatchWarrantyClaimDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some() || self.customer_id.is_some() || self.item_id.is_some() || self.serial_no.is_some() || self.claim_date.is_some() || self.warranty_expiry.is_some() || self.is_under_warranty.is_some() || self.status.is_some() || self.issue_id.is_some() || self.description.is_some() || self.resolution.is_some()
+        self.customer_id.is_some()
+            || self.item_id.is_some()
+            || self.serial_no.is_some()
+            || self.claim_date.is_some()
+            || self.warranty_expiry.is_some()
+            || self.is_under_warranty.is_some()
+            || self.status.is_some()
+            || self.issue_id.is_some()
+            || self.description.is_some()
+            || self.resolution.is_some()
     }
 }
 
@@ -169,12 +194,16 @@ impl PatchWarrantyClaimDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct WarrantyClaimResponseDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub item_id: Uuid,
     pub serial_no: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
@@ -243,9 +272,9 @@ impl WarrantyClaimListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct WarrantyClaimSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub item_id: Uuid,
+    pub serial_no: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -257,7 +286,6 @@ impl From<WarrantyClaim> for WarrantyClaimResponseDto {
     fn from(entity: WarrantyClaim) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             customer_id: entity.customer_id,
             item_id: entity.item_id,
             serial_no: entity.serial_no,
@@ -278,9 +306,9 @@ impl From<WarrantyClaim> for WarrantyClaimSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             customer_id: entity.customer_id,
             item_id: entity.item_id,
+            serial_no: entity.serial_no,
             created_at,
         }
     }
@@ -290,7 +318,6 @@ impl From<CreateWarrantyClaimDto> for WarrantyClaim {
     fn from(dto: CreateWarrantyClaimDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             customer_id: dto.customer_id,
             item_id: dto.item_id,
             serial_no: dto.serial_no,
@@ -310,7 +337,6 @@ impl From<&WarrantyClaim> for WarrantyClaimResponseDto {
     fn from(entity: &WarrantyClaim) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             customer_id: entity.customer_id.clone(),
             item_id: entity.item_id.clone(),
             serial_no: entity.serial_no.clone(),
@@ -334,7 +360,6 @@ impl backbone_core::FromCreateDto<CreateWarrantyClaimDto> for WarrantyClaim {
 
 impl backbone_core::ApplyUpdateDto<UpdateWarrantyClaimDto> for WarrantyClaim {
     fn apply_update(mut self, dto: UpdateWarrantyClaimDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.customer_id = dto.customer_id;
         self.item_id = dto.item_id;
         self.serial_no = dto.serial_no;

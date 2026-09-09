@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateIssueDto, UpdateIssueDto};
 use crate::domain::entity::Issue;
 use crate::infrastructure::persistence::IssueRepository;
+use crate::presentation::dto::{CreateIssueDto, UpdateIssueDto};
 
 /// Application service for Issue entities.
 ///
@@ -25,12 +25,7 @@ use crate::infrastructure::persistence::IssueRepository;
 ///     // add domain-specific dependencies here
 /// }
 /// ```
-pub type IssueService = GenericCrudService<
-    Issue,
-    CreateIssueDto,
-    UpdateIssueDto,
-    IssueRepository,
->;
+pub type IssueService = GenericCrudService<Issue, CreateIssueDto, UpdateIssueDto, IssueRepository>;
 
 // <<< CUSTOM
 // END CUSTOM

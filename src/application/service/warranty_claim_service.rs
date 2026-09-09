@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateWarrantyClaimDto, UpdateWarrantyClaimDto};
 use crate::domain::entity::WarrantyClaim;
 use crate::infrastructure::persistence::WarrantyClaimRepository;
+use crate::presentation::dto::{CreateWarrantyClaimDto, UpdateWarrantyClaimDto};
 
 /// Application service for WarrantyClaim entities.
 ///

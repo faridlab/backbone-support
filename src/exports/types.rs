@@ -5,10 +5,10 @@
 //! These DTOs are the ONLY types other modules should use.
 //! They are decoupled from internal domain entities.
 
+use crate::domain::entity::*;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use crate::domain::entity::*;
 
 // ============================================================================
 // ISSUE TYPES
@@ -48,7 +48,6 @@ impl From<IssueId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IssueDto {
     pub id: IssueId,
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub subject: String,
     pub description: Option<String>,
@@ -119,7 +118,6 @@ impl From<ServiceLevelAgreementId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceLevelAgreementDto {
     pub id: ServiceLevelAgreementId,
-    pub company_id: Uuid,
     pub name: String,
     pub is_default: bool,
     pub status: ServiceLevelAgreementStatus,
@@ -179,7 +177,6 @@ impl From<ServiceLevelPriorityId> for Uuid {
 pub struct ServiceLevelPriorityDto {
     pub id: ServiceLevelPriorityId,
     pub sla_id: Uuid,
-    pub company_id: Uuid,
     pub priority: IssuePriority,
     pub response_time_mins: i32,
     pub resolution_time_mins: i32,
@@ -236,7 +233,6 @@ impl From<WarrantyClaimId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WarrantyClaimDto {
     pub id: WarrantyClaimId,
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub item_id: Uuid,
     pub serial_no: Option<String>,

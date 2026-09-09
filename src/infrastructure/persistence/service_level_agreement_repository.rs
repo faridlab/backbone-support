@@ -4,14 +4,18 @@
 //! `user_owned` in `metaphor.codegen.yaml`, so the generator skips it wholesale. The custom methods
 //! below hold the hand-written SLA SQL (4-layer rule: services orchestrate, repositories hold the SQL).
 //!
+//! Tenancy (ADR-0029): the SQL here carries no tenant key. The scoped-execute helpers ride the
+//! request-dedicated connection when the composing service bound one (its fence variables govern
+//! what the RLS layer accepts) and fall back to a plain pool execute otherwise.
+//!
 //! Thin newtype over `backbone_orm::GenericCrudRepository<ServiceLevelAgreement, backbone_orm::SoftDelete>`.
 //! All standard CRUD methods are available via `Deref`.
 
 use anyhow::Result;
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+use backbone_orm::org_scope;
 
 use crate::domain::entity::ServiceLevelAgreement;
 
@@ -27,8 +31,11 @@ pub struct ServiceLevelAgreementRepository(
 );
 
 impl std::ops::Deref for ServiceLevelAgreementRepository {
-    type Target = backbone_orm::GenericCrudRepository<ServiceLevelAgreement, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    type Target =
+        backbone_orm::GenericCrudRepository<ServiceLevelAgreement, backbone_orm::SoftDelete>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl ServiceLevelAgreementRepository {
@@ -44,7 +51,6 @@ impl ServiceLevelAgreementRepository {
 /// composes it from its `NewSla` DTO and never hands a generated entity to the SQL.
 pub struct NewSlaRow<'a> {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: &'a str,
     pub is_default: bool,
 }
@@ -53,45 +59,45 @@ pub struct NewSlaRow<'a> {
 /// 4-layer rule: services orchestrate and own the unit of work, repositories hold the SQL.
 impl ServiceLevelAgreementRepository {
     /// Insert the SLA header. Takes the CALLER'S connection so the header and its per-priority target
-    /// rows commit as one unit. The caller binds the company on that connection (`bind_company_on`)
-    /// before calling — don't re-bind here.
+    /// rows commit as one unit. The caller has already relayed the ambient org scope onto that
+    /// connection — don't re-bind here.
     pub async fn insert_sla(
         &self,
         conn: &mut sqlx::PgConnection,
         s: &NewSlaRow<'_>,
     ) -> Result<(), sqlx::Error> {
         sqlx::query(
-            r#"INSERT INTO support.service_level_agreements (id, company_id, name, is_default, status)
-               VALUES ($1,$2,$3,$4,'active')"#,
+            r#"INSERT INTO support.service_level_agreements (id, name, is_default, status)
+               VALUES ($1,$2,$3,'active')"#,
         )
-        .bind(s.id).bind(s.company_id).bind(s.name).bind(s.is_default)
+        .bind(s.id)
+        .bind(s.name)
+        .bind(s.is_default)
         .execute(conn)
         .await?;
         Ok(())
     }
 
-    /// The company's default active SLA, if it has one — the fallback when a ticket is raised without an
-    /// explicit SLA.
-    ///
-    /// A read outside any transaction: takes the pool and runs `fetch_optional_scalar_scoped` so the RLS
-    /// fence (ADR-0008) applies. The explicit `company_id = $1` filter stays as defense-in-depth. The
-    /// caller wraps this in `with_company_scope(Some(company))`.
-    pub async fn find_default_id(
-        &self,
-        pool: &PgPool,
-        company_id: Uuid,
-    ) -> Result<Option<Uuid>, sqlx::Error> {
-        company_scope::fetch_optional_scalar_scoped(
+    /// The default active SLA, if one exists — the fallback when a ticket is raised without an
+    /// explicit SLA. Under a composing service's row fence (RLS), the scope bound on the request
+    /// connection limits what is visible; with no fence mounted, this is the deployment's single
+    /// default.
+    pub async fn find_default_id(&self, pool: &PgPool) -> Result<Option<Uuid>, sqlx::Error> {
+        let row = org_scope::fetch_optional_row_scoped(
             pool,
-            sqlx::query_scalar(
+            sqlx::query(
                 r#"SELECT id FROM support.service_level_agreements
-                   WHERE company_id=$1 AND is_default=true AND status='active'
+                   WHERE is_default=true AND status='active'
                      AND (metadata->>'deleted_at') IS NULL LIMIT 1"#,
-            )
-            .bind(company_id),
+            ),
         )
-        .await
+        .await?;
+        Ok(row.map(|r| r.get::<Uuid, _>("id")))
     }
 }
 
-backbone_core::impl_crud_repository!(ServiceLevelAgreementRepository, ServiceLevelAgreement, soft_delete);
+backbone_core::impl_crud_repository!(
+    ServiceLevelAgreementRepository,
+    ServiceLevelAgreement,
+    soft_delete
+);

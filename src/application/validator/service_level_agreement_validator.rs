@@ -5,17 +5,18 @@
 //! Returns an `EntityValidator<ServiceLevelAgreement>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
-use backbone_core::{RequiredString};
 use crate::domain::entity::ServiceLevelAgreement;
+use backbone_core::RequiredString;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for ServiceLevelAgreement entities.
 pub type ServiceLevelAgreementValidator = EntityValidator<ServiceLevelAgreement>;
 
 /// Build a validator for ServiceLevelAgreement with all schema-defined field rules.
 pub fn service_level_agreement_validator() -> ServiceLevelAgreementValidator {
-    EntityValidator::new()
-        .rule(RequiredString::new("name", |e: &ServiceLevelAgreement| &e.name))
+    EntityValidator::new().rule(RequiredString::new("name", |e: &ServiceLevelAgreement| {
+        &e.name
+    }))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

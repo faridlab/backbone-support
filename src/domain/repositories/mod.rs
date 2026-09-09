@@ -5,7 +5,6 @@
 //! DDD Repository traits - define persistence contracts for aggregates.
 //! Implementations should be in the infrastructure layer.
 
-
 pub mod issue_repository;
 pub mod service_level_agreement_repository;
 pub mod service_level_priority_repository;
@@ -13,26 +12,17 @@ pub mod warranty_claim_repository;
 
 // Re-exports
 pub use issue_repository::{
-    IssueRepository,
-    IssuePaginationParams,
-    IssuePaginatedResult,
-    IssueFilter,
+    IssueFilter, IssuePaginatedResult, IssuePaginationParams, IssueRepository,
 };
 pub use service_level_agreement_repository::{
-    ServiceLevelAgreementRepository,
-    ServiceLevelAgreementPaginationParams,
-    ServiceLevelAgreementPaginatedResult,
-    ServiceLevelAgreementFilter,
+    ServiceLevelAgreementFilter, ServiceLevelAgreementPaginatedResult,
+    ServiceLevelAgreementPaginationParams, ServiceLevelAgreementRepository,
 };
 pub use service_level_priority_repository::{
-    ServiceLevelPriorityRepository,
-    ServiceLevelPriorityPaginationParams,
-    ServiceLevelPriorityPaginatedResult,
-    ServiceLevelPriorityFilter,
+    ServiceLevelPriorityFilter, ServiceLevelPriorityPaginatedResult,
+    ServiceLevelPriorityPaginationParams, ServiceLevelPriorityRepository,
 };
 pub use warranty_claim_repository::{
+    WarrantyClaimFilter, WarrantyClaimPaginatedResult, WarrantyClaimPaginationParams,
     WarrantyClaimRepository,
-    WarrantyClaimPaginationParams,
-    WarrantyClaimPaginatedResult,
-    WarrantyClaimFilter,
 };

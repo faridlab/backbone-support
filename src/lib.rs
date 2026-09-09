@@ -18,12 +18,12 @@
 #![allow(unused_imports)]
 
 // Generated modules
-pub mod domain;
-pub mod infrastructure;
 pub mod application;
+pub mod domain;
+pub mod exports;
+pub mod infrastructure;
 pub mod presentation;
 pub mod seeders;
-pub mod exports;
 
 // Re-exports for convenience - Domain entities
 pub use domain::entity::*;
@@ -37,9 +37,9 @@ pub use application::service::ServiceLevelAgreementService;
 pub use application::service::ServiceLevelPriorityService;
 pub use application::service::WarrantyClaimService;
 
-use std::sync::Arc;
 use axum::Router;
 use sqlx::PgPool;
+use std::sync::Arc;
 
 /// Support module configuration
 ///
@@ -75,17 +75,21 @@ impl SupportModule {
     /// real deployment; use this only in trusted/admin/seeding contexts.
     pub fn all_crud_routes(&self) -> Router {
         use presentation::http::{
-            create_issue_routes,
-            create_service_level_agreement_routes,
-            create_service_level_priority_routes,
-            create_warranty_claim_routes,
+            create_issue_routes, create_service_level_agreement_routes,
+            create_service_level_priority_routes, create_warranty_claim_routes,
         };
 
         Router::new()
             .merge(create_issue_routes(self.issue_service.clone()))
-            .merge(create_service_level_agreement_routes(self.service_level_agreement_service.clone()))
-            .merge(create_service_level_priority_routes(self.service_level_priority_service.clone()))
-            .merge(create_warranty_claim_routes(self.warranty_claim_service.clone()))
+            .merge(create_service_level_agreement_routes(
+                self.service_level_agreement_service.clone(),
+            ))
+            .merge(create_service_level_priority_routes(
+                self.service_level_priority_service.clone(),
+            ))
+            .merge(create_warranty_claim_routes(
+                self.warranty_claim_service.clone(),
+            ))
     }
 
     /// Deprecated alias for [`Self::all_crud_routes`]. `routes()` reads like
@@ -93,7 +97,9 @@ impl SupportModule {
     /// mount exposes unguarded writes. Compose a guarded router (read + validated
     /// writes) for production, or call `all_crud_routes()` to opt into the full
     /// unguarded surface explicitly.
-    #[deprecated(note = "mounts unvalidated generic CRUD; prefer readonly_routes() + validated writes, or all_crud_routes() for the full/unguarded surface")]
+    #[deprecated(
+        note = "mounts unvalidated generic CRUD; prefer readonly_routes() + validated writes, or all_crud_routes() for the full/unguarded surface"
+    )]
     pub fn routes(&self) -> Router {
         self.all_crud_routes()
     }
@@ -105,17 +111,21 @@ impl SupportModule {
     /// merge validated write routes (or a write service's HTTP layer) onto it.
     pub fn readonly_routes(&self) -> Router {
         use presentation::http::{
-            create_issue_read_routes,
-            create_service_level_agreement_read_routes,
-            create_service_level_priority_read_routes,
-            create_warranty_claim_read_routes,
+            create_issue_read_routes, create_service_level_agreement_read_routes,
+            create_service_level_priority_read_routes, create_warranty_claim_read_routes,
         };
 
         Router::new()
             .merge(create_issue_read_routes(self.issue_service.clone()))
-            .merge(create_service_level_agreement_read_routes(self.service_level_agreement_service.clone()))
-            .merge(create_service_level_priority_read_routes(self.service_level_priority_service.clone()))
-            .merge(create_warranty_claim_read_routes(self.warranty_claim_service.clone()))
+            .merge(create_service_level_agreement_read_routes(
+                self.service_level_agreement_service.clone(),
+            ))
+            .merge(create_service_level_priority_read_routes(
+                self.service_level_priority_service.clone(),
+            ))
+            .merge(create_warranty_claim_read_routes(
+                self.warranty_claim_service.clone(),
+            ))
     }
 
     // <<< CUSTOM METHODS
@@ -130,9 +140,7 @@ pub struct SupportModuleBuilder {
 impl SupportModuleBuilder {
     /// Create a new builder
     pub fn new() -> Self {
-        Self {
-            db_pool: None,
-        }
+        Self { db_pool: None }
     }
 
     /// Set the database connection pool
@@ -146,7 +154,8 @@ impl SupportModuleBuilder {
 
     /// Build the module with configured dependencies
     pub fn build(self) -> anyhow::Result<SupportModule> {
-        let db_pool = self.db_pool
+        let db_pool = self
+            .db_pool
             .ok_or_else(|| anyhow::anyhow!("Database pool not configured"))?;
 
         // Issue service
@@ -154,16 +163,25 @@ impl SupportModuleBuilder {
         let issue_service = Arc::new(IssueService::with_repository(issue_repository.clone()));
 
         // ServiceLevelAgreement service
-        let service_level_agreement_repository = Arc::new(ServiceLevelAgreementRepository::new(db_pool.clone()));
-        let service_level_agreement_service = Arc::new(ServiceLevelAgreementService::with_repository(service_level_agreement_repository.clone()));
+        let service_level_agreement_repository =
+            Arc::new(ServiceLevelAgreementRepository::new(db_pool.clone()));
+        let service_level_agreement_service =
+            Arc::new(ServiceLevelAgreementService::with_repository(
+                service_level_agreement_repository.clone(),
+            ));
 
         // ServiceLevelPriority service
-        let service_level_priority_repository = Arc::new(ServiceLevelPriorityRepository::new(db_pool.clone()));
-        let service_level_priority_service = Arc::new(ServiceLevelPriorityService::with_repository(service_level_priority_repository.clone()));
+        let service_level_priority_repository =
+            Arc::new(ServiceLevelPriorityRepository::new(db_pool.clone()));
+        let service_level_priority_service = Arc::new(
+            ServiceLevelPriorityService::with_repository(service_level_priority_repository.clone()),
+        );
 
         // WarrantyClaim service
         let warranty_claim_repository = Arc::new(WarrantyClaimRepository::new(db_pool.clone()));
-        let warranty_claim_service = Arc::new(WarrantyClaimService::with_repository(warranty_claim_repository.clone()));
+        let warranty_claim_service = Arc::new(WarrantyClaimService::with_repository(
+            warranty_claim_repository.clone(),
+        ));
 
         // <<< CUSTOM
         // END CUSTOM

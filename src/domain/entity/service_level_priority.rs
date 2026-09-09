@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::IssuePriority;
 use super::AuditMetadata;
+use super::IssuePriority;
 
 /// Strongly-typed ID for ServiceLevelPriority
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,9 +12,15 @@ use super::AuditMetadata;
 pub struct ServiceLevelPriorityId(pub Uuid);
 
 impl ServiceLevelPriorityId {
-    pub fn new(id: Uuid) -> Self { Self(id) }
-    pub fn generate() -> Self { Self(Uuid::new_v4()) }
-    pub fn into_inner(self) -> Uuid { self.0 }
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
 }
 
 impl std::fmt::Display for ServiceLevelPriorityId {
@@ -31,27 +37,34 @@ impl std::str::FromStr for ServiceLevelPriorityId {
 }
 
 impl From<Uuid> for ServiceLevelPriorityId {
-    fn from(id: Uuid) -> Self { Self(id) }
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
 }
 
 impl From<ServiceLevelPriorityId> for Uuid {
-    fn from(id: ServiceLevelPriorityId) -> Self { id.0 }
+    fn from(id: ServiceLevelPriorityId) -> Self {
+        id.0
+    }
 }
 
 impl AsRef<Uuid> for ServiceLevelPriorityId {
-    fn as_ref(&self) -> &Uuid { &self.0 }
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
 }
 
 impl std::ops::Deref for ServiceLevelPriorityId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ServiceLevelPriority {
     pub id: Uuid,
     pub sla_id: Uuid,
-    pub company_id: Uuid,
     pub priority: IssuePriority,
     pub response_time_mins: i32,
     pub resolution_time_mins: i32,
@@ -67,11 +80,15 @@ impl ServiceLevelPriority {
     }
 
     /// Create a new ServiceLevelPriority with required fields
-    pub fn new(sla_id: Uuid, company_id: Uuid, priority: IssuePriority, response_time_mins: i32, resolution_time_mins: i32) -> Self {
+    pub fn new(
+        sla_id: Uuid,
+        priority: IssuePriority,
+        response_time_mins: i32,
+        resolution_time_mins: i32,
+    ) -> Self {
         Self {
             id: Uuid::new_v4(),
             sla_id,
-            company_id,
             priority,
             response_time_mins,
             resolution_time_mins,
@@ -129,7 +146,6 @@ impl ServiceLevelPriority {
         self.metadata.deleted_by.as_ref()
     }
 
-
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -139,19 +155,24 @@ impl ServiceLevelPriority {
         for (key, value) in fields {
             match key.as_str() {
                 "sla_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.sla_id = v; }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.company_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.sla_id = v;
+                    }
                 }
                 "priority" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.priority = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.priority = v;
+                    }
                 }
                 "response_time_mins" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.response_time_mins = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.response_time_mins = v;
+                    }
                 }
                 "resolution_time_mins" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.resolution_time_mins = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.resolution_time_mins = v;
+                    }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -208,15 +229,11 @@ impl backbone_orm::EntityRepoMeta for ServiceLevelPriority {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("sla_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("priority".to_string(), "issue_priority".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -227,7 +244,6 @@ impl backbone_orm::EntityRepoMeta for ServiceLevelPriority {
 #[derive(Debug, Clone, Default)]
 pub struct ServiceLevelPriorityBuilder {
     sla_id: Option<Uuid>,
-    company_id: Option<Uuid>,
     priority: Option<IssuePriority>,
     response_time_mins: Option<i32>,
     resolution_time_mins: Option<i32>,
@@ -237,12 +253,6 @@ impl ServiceLevelPriorityBuilder {
     /// Set the sla_id field (required)
     pub fn sla_id(mut self, value: Uuid) -> Self {
         self.sla_id = Some(value);
-        self
-    }
-
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
         self
     }
 
@@ -268,16 +278,22 @@ impl ServiceLevelPriorityBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ServiceLevelPriority, String> {
-        let sla_id = self.sla_id.ok_or_else(|| "sla_id is required".to_string())?;
-        let company_id = self.company_id.ok_or_else(|| "company_id is required".to_string())?;
-        let priority = self.priority.ok_or_else(|| "priority is required".to_string())?;
-        let response_time_mins = self.response_time_mins.ok_or_else(|| "response_time_mins is required".to_string())?;
-        let resolution_time_mins = self.resolution_time_mins.ok_or_else(|| "resolution_time_mins is required".to_string())?;
+        let sla_id = self
+            .sla_id
+            .ok_or_else(|| "sla_id is required".to_string())?;
+        let priority = self
+            .priority
+            .ok_or_else(|| "priority is required".to_string())?;
+        let response_time_mins = self
+            .response_time_mins
+            .ok_or_else(|| "response_time_mins is required".to_string())?;
+        let resolution_time_mins = self
+            .resolution_time_mins
+            .ok_or_else(|| "resolution_time_mins is required".to_string())?;
 
         Ok(ServiceLevelPriority {
             id: Uuid::new_v4(),
             sla_id,
-            company_id,
             priority,
             response_time_mins,
             resolution_time_mins,

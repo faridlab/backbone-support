@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateServiceLevelAgreementDto, UpdateServiceLevelAgreementDto};
 use crate::domain::entity::ServiceLevelAgreement;
 use crate::infrastructure::persistence::ServiceLevelAgreementRepository;
+use crate::presentation::dto::{CreateServiceLevelAgreementDto, UpdateServiceLevelAgreementDto};
 
 /// Application service for ServiceLevelAgreement entities.
 ///

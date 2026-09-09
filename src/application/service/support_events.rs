@@ -13,7 +13,6 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IssueResolved {
     pub issue_id: Uuid,
-    pub company_id: Uuid,
     pub fulfilled: bool,
 }
 
@@ -21,7 +20,6 @@ pub struct IssueResolved {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IssueEscalated {
     pub issue_id: Uuid,
-    pub company_id: Uuid,
     pub project_id: Uuid,
 }
 
@@ -29,7 +27,6 @@ pub struct IssueEscalated {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WarrantyClaimFiled {
     pub claim_id: Uuid,
-    pub company_id: Uuid,
     pub is_under_warranty: bool,
 }
 

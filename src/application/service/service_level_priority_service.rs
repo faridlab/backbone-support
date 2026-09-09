@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto};
 use crate::domain::entity::ServiceLevelPriority;
 use crate::infrastructure::persistence::ServiceLevelPriorityRepository;
+use crate::presentation::dto::{CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto};
 
 /// Application service for ServiceLevelPriority entities.
 ///

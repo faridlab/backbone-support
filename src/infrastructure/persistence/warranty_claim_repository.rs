@@ -4,6 +4,10 @@
 //! `user_owned` in `metaphor.codegen.yaml`, so the generator skips it wholesale. The custom methods
 //! below hold the hand-written WarrantyClaim SQL (4-layer rule: services orchestrate, repos hold SQL).
 //!
+//! Tenancy (ADR-0029): the SQL here carries no tenant key. The scoped-execute helpers ride the
+//! request-dedicated connection when the composing service bound one (its fence variables govern
+//! what the RLS layer accepts) and fall back to a plain pool execute otherwise.
+//!
 //! Thin newtype over `backbone_orm::GenericCrudRepository<WarrantyClaim, backbone_orm::SoftDelete>`.
 //! All standard CRUD methods are available via `Deref`.
 
@@ -12,7 +16,7 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+use backbone_orm::org_scope;
 
 use crate::domain::entity::WarrantyClaim;
 
@@ -29,7 +33,9 @@ pub struct WarrantyClaimRepository(
 
 impl std::ops::Deref for WarrantyClaimRepository {
     type Target = backbone_orm::GenericCrudRepository<WarrantyClaim, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl WarrantyClaimRepository {
@@ -45,7 +51,6 @@ impl WarrantyClaimRepository {
 /// (`is_under_warranty`) is computed by the caller at file time and stored, not re-derived here.
 pub struct NewWarrantyClaimRow<'a> {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub item_id: Uuid,
     pub serial_no: Option<&'a str>,
@@ -60,20 +65,30 @@ pub struct NewWarrantyClaimRow<'a> {
 impl WarrantyClaimRepository {
     /// File a warranty claim.
     ///
-    /// A write outside any transaction: takes the pool and runs `execute_scoped` so the RLS fence
-    /// (ADR-0008) applies. The caller wraps this in `with_company_scope(Some(company))` — the company is
-    /// on the DTO, and that scope is what satisfies the INSERT's WITH CHECK fence.
-    pub async fn insert_claim(&self, pool: &PgPool, c: &NewWarrantyClaimRow<'_>) -> Result<(), sqlx::Error> {
-        company_scope::execute_scoped(
+    /// A write outside any transaction: takes the pool and runs the scoped helper so it rides the
+    /// request-dedicated connection when the composing service bound a scope — under a decorated
+    /// deployment the fence's WITH CHECK governs the row; with no scope bound this is a plain insert.
+    pub async fn insert_claim(
+        &self,
+        pool: &PgPool,
+        c: &NewWarrantyClaimRow<'_>,
+    ) -> Result<(), sqlx::Error> {
+        org_scope::execute_scoped(
             pool,
             sqlx::query(
                 r#"INSERT INTO support.warranty_claims
-                     (id, company_id, customer_id, item_id, serial_no, claim_date, warranty_expiry,
+                     (id, customer_id, item_id, serial_no, claim_date, warranty_expiry,
                       is_under_warranty, status, issue_id, description)
-                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'open'::warranty_status,$9,$10)"#,
+                   VALUES ($1,$2,$3,$4,$5,$6,$7,'open'::warranty_status,$8,$9)"#,
             )
-            .bind(c.id).bind(c.company_id).bind(c.customer_id).bind(c.item_id).bind(c.serial_no)
-            .bind(c.claim_date).bind(c.warranty_expiry).bind(c.is_under_warranty).bind(c.issue_id)
+            .bind(c.id)
+            .bind(c.customer_id)
+            .bind(c.item_id)
+            .bind(c.serial_no)
+            .bind(c.claim_date)
+            .bind(c.warranty_expiry)
+            .bind(c.is_under_warranty)
+            .bind(c.issue_id)
             .bind(c.description),
         )
         .await?;
@@ -81,11 +96,7 @@ impl WarrantyClaimRepository {
     }
 
     /// Adjudicate an open claim. `status` is bound as a free string and cast at the DB
-    /// (`$2::warranty_status`). Returns rows affected (0 = not an open claim in scope).
-    ///
-    /// ID-only: no company argument. Runs `execute_scoped`, so it rides a connection carrying the
-    /// caller's `app.company_id` and another company's claim simply is not updated. A non-request caller
-    /// (event/job) must wrap this in `with_company_scope(Some(company_id))` or it fails closed.
+    /// (`$2::warranty_status`). Returns rows affected (0 = not an open claim).
     pub async fn adjudicate(
         &self,
         pool: &PgPool,
@@ -93,7 +104,7 @@ impl WarrantyClaimRepository {
         status: &str,
         resolution: Option<&str>,
     ) -> Result<u64, sqlx::Error> {
-        let moved = company_scope::execute_scoped(
+        let moved = org_scope::execute_scoped(
             pool,
             sqlx::query(
                 r#"UPDATE support.warranty_claims SET status=$2::warranty_status, resolution=$3

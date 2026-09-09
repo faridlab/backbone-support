@@ -4,6 +4,10 @@
 //! `user_owned` in `metaphor.codegen.yaml`, so the generator skips it wholesale. The custom methods
 //! below hold the hand-written SLA-target SQL (4-layer rule: services orchestrate, repos hold the SQL).
 //!
+//! Tenancy (ADR-0029): the SQL here carries no tenant key. The scoped-execute helpers ride the
+//! request-dedicated connection when the composing service bound one (its fence variables govern
+//! what the RLS layer accepts) and fall back to a plain pool execute otherwise.
+//!
 //! Thin newtype over `backbone_orm::GenericCrudRepository<ServiceLevelPriority, backbone_orm::SoftDelete>`.
 //! All standard CRUD methods are available via `Deref`.
 
@@ -11,7 +15,7 @@ use anyhow::Result;
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+use backbone_orm::org_scope;
 
 use crate::domain::entity::ServiceLevelPriority;
 
@@ -27,8 +31,11 @@ pub struct ServiceLevelPriorityRepository(
 );
 
 impl std::ops::Deref for ServiceLevelPriorityRepository {
-    type Target = backbone_orm::GenericCrudRepository<ServiceLevelPriority, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    type Target =
+        backbone_orm::GenericCrudRepository<ServiceLevelPriority, backbone_orm::SoftDelete>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl ServiceLevelPriorityRepository {
@@ -46,7 +53,6 @@ impl ServiceLevelPriorityRepository {
 pub struct NewSlaPriorityRow<'a> {
     pub id: Uuid,
     pub sla_id: Uuid,
-    pub company_id: Uuid,
     pub priority: &'a str,
     pub response_time_mins: i32,
     pub resolution_time_mins: i32,
@@ -62,7 +68,8 @@ pub struct SlaTargetRow {
 /// 4-layer rule.
 impl ServiceLevelPriorityRepository {
     /// Insert one per-priority target. Takes the CALLER'S connection so it commits with the SLA header
-    /// it belongs to. The caller has already bound the company on that connection — don't re-bind here.
+    /// it belongs to. The caller has already relayed the ambient org scope onto that connection —
+    /// don't re-bind here.
     pub async fn insert_priority(
         &self,
         conn: &mut sqlx::PgConnection,
@@ -70,10 +77,14 @@ impl ServiceLevelPriorityRepository {
     ) -> Result<(), sqlx::Error> {
         sqlx::query(
             r#"INSERT INTO support.service_level_priorities
-                 (id, sla_id, company_id, priority, response_time_mins, resolution_time_mins)
-               VALUES ($1,$2,$3,$4::issue_priority,$5,$6)"#,
+                 (id, sla_id, priority, response_time_mins, resolution_time_mins)
+               VALUES ($1,$2,$3::issue_priority,$4,$5)"#,
         )
-        .bind(p.id).bind(p.sla_id).bind(p.company_id).bind(p.priority).bind(p.response_time_mins).bind(p.resolution_time_mins)
+        .bind(p.id)
+        .bind(p.sla_id)
+        .bind(p.priority)
+        .bind(p.response_time_mins)
+        .bind(p.resolution_time_mins)
         .execute(conn)
         .await?;
         Ok(())
@@ -81,16 +92,13 @@ impl ServiceLevelPriorityRepository {
 
     /// The target an SLA promises for one priority — the source of a raised ticket's snapshotted
     /// deadlines. `Ok(None)` = this SLA makes no promise at that priority.
-    ///
-    /// A read outside any transaction: takes the pool and runs `fetch_optional_row_scoped` so the RLS
-    /// fence (ADR-0008) applies. The caller wraps this in `with_company_scope(Some(company))`.
     pub async fn find_target(
         &self,
         pool: &PgPool,
         sla_id: Uuid,
         priority: &str,
     ) -> Result<Option<SlaTargetRow>, sqlx::Error> {
-        let row = company_scope::fetch_optional_row_scoped(
+        let row = org_scope::fetch_optional_row_scoped(
             pool,
             sqlx::query(
                 r#"SELECT response_time_mins, resolution_time_mins FROM support.service_level_priorities
@@ -107,4 +115,8 @@ impl ServiceLevelPriorityRepository {
     }
 }
 
-backbone_core::impl_crud_repository!(ServiceLevelPriorityRepository, ServiceLevelPriority, soft_delete);
+backbone_core::impl_crud_repository!(
+    ServiceLevelPriorityRepository,
+    ServiceLevelPriority,
+    soft_delete
+);

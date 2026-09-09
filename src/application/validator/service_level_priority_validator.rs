@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<ServiceLevelPriority>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
-use backbone_core::{NonNegative};
 use crate::domain::entity::ServiceLevelPriority;
+use backbone_core::NonNegative;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for ServiceLevelPriority entities.
 pub type ServiceLevelPriorityValidator = EntityValidator<ServiceLevelPriority>;
@@ -15,8 +15,14 @@ pub type ServiceLevelPriorityValidator = EntityValidator<ServiceLevelPriority>;
 /// Build a validator for ServiceLevelPriority with all schema-defined field rules.
 pub fn service_level_priority_validator() -> ServiceLevelPriorityValidator {
     EntityValidator::new()
-        .rule(NonNegative::new("response_time_mins", |e: &ServiceLevelPriority| e.response_time_mins as i64))
-        .rule(NonNegative::new("resolution_time_mins", |e: &ServiceLevelPriority| e.resolution_time_mins as i64))
+        .rule(NonNegative::new(
+            "response_time_mins",
+            |e: &ServiceLevelPriority| e.response_time_mins as i64,
+        ))
+        .rule(NonNegative::new(
+            "resolution_time_mins",
+            |e: &ServiceLevelPriority| e.resolution_time_mins as i64,
+        ))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

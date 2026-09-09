@@ -21,12 +21,14 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
+use crate::application::service::{ServiceError, ServiceLevelPriorityService};
 use crate::domain::entity::*;
-use crate::application::service::{ServiceLevelPriorityService, ServiceError};
 
 // DTO imports
-use crate::presentation::dto::{CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, PatchServiceLevelPriorityDto, ServiceLevelPriorityResponseDto};
-
+use crate::presentation::dto::{
+    CreateServiceLevelPriorityDto, PatchServiceLevelPriorityDto, ServiceLevelPriorityResponseDto,
+    UpdateServiceLevelPriorityDto,
+};
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -60,9 +62,18 @@ impl axum::response::IntoResponse for ServiceLevelPriorityError {
 
         let (status, code) = match &self {
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "SERVICELEVELPRIORITY_NOT_FOUND"),
-            Self::Validation(_) => (StatusCode::BAD_REQUEST, "SERVICELEVELPRIORITY_VALIDATION_ERROR"),
-            Self::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "SERVICELEVELPRIORITY_DATABASE_ERROR"),
-            Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "SERVICELEVELPRIORITY_INTERNAL_ERROR"),
+            Self::Validation(_) => (
+                StatusCode::BAD_REQUEST,
+                "SERVICELEVELPRIORITY_VALIDATION_ERROR",
+            ),
+            Self::Database(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "SERVICELEVELPRIORITY_DATABASE_ERROR",
+            ),
+            Self::Internal(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "SERVICELEVELPRIORITY_INTERNAL_ERROR",
+            ),
         };
 
         let body = serde_json::json!({
@@ -108,10 +119,13 @@ impl axum::response::IntoResponse for ServiceLevelPriorityError {
 /// let router = create_service_level_priority_routes(service);
 /// ```
 pub fn create_service_level_priority_routes(service: Arc<ServiceLevelPriorityService>) -> Router {
-    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::routes(
-        service,
-        "/service_level_priorities",
-    )
+    BackboneCrudHandler::<
+        ServiceLevelPriorityService,
+        ServiceLevelPriority,
+        CreateServiceLevelPriorityDto,
+        UpdateServiceLevelPriorityDto,
+        ServiceLevelPriorityResponseDto,
+    >::routes(service, "/service_level_priorities")
 }
 
 /// Create Axum router with only the read (GET) endpoints for ServiceLevelPriority.
@@ -119,11 +133,16 @@ pub fn create_service_level_priority_routes(service: Arc<ServiceLevelPrioritySer
 /// Safe for public, unauthenticated exposure (e.g., reference data).
 /// Mutations must be served separately via `create_service_level_priority_write_routes`,
 /// typically wrapped in an auth middleware layer.
-pub fn create_service_level_priority_read_routes(service: Arc<ServiceLevelPriorityService>) -> Router {
-    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::read_routes(
-        service,
-        "/service_level_priorities",
-    )
+pub fn create_service_level_priority_read_routes(
+    service: Arc<ServiceLevelPriorityService>,
+) -> Router {
+    BackboneCrudHandler::<
+        ServiceLevelPriorityService,
+        ServiceLevelPriority,
+        CreateServiceLevelPriorityDto,
+        UpdateServiceLevelPriorityDto,
+        ServiceLevelPriorityResponseDto,
+    >::read_routes(service, "/service_level_priorities")
 }
 
 /// Create Axum router with only the write (mutation) endpoints for ServiceLevelPriority.
@@ -137,11 +156,16 @@ pub fn create_service_level_priority_read_routes(service: Arc<ServiceLevelPriori
 /// they bypass all business invariants. If the module exposes a validated write
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
-pub fn create_service_level_priority_write_routes(service: Arc<ServiceLevelPriorityService>) -> Router {
-    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::write_routes(
-        service,
-        "/service_level_priorities",
-    )
+pub fn create_service_level_priority_write_routes(
+    service: Arc<ServiceLevelPriorityService>,
+) -> Router {
+    BackboneCrudHandler::<
+        ServiceLevelPriorityService,
+        ServiceLevelPriority,
+        CreateServiceLevelPriorityDto,
+        UpdateServiceLevelPriorityDto,
+        ServiceLevelPriorityResponseDto,
+    >::write_routes(service, "/service_level_priorities")
 }
 
 /// Create authenticated routes with auth middleware.
@@ -158,30 +182,35 @@ pub fn create_protected_service_level_priority_routes<A: AuthMiddleware + Send +
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_service_level_priority_routes(service)
-        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_service_level_priority_routes(service).layer(middleware::from_fn(
+        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req.headers()
+                let token = req
+                    .headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
+                    .and_then(|raw| {
+                        raw.strip_prefix("Bearer ")
+                            .or_else(|| raw.strip_prefix("bearer "))
+                    })
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => {
-                        (axum::http::StatusCode::UNAUTHORIZED,
-                         axum::Json(serde_json::json!({
-                             "success": false,
-                             "error": "unauthorized",
-                             "message": "Authentication required"
-                         }))
-                        ).into_response()
-                    }
+                    Err(_) => (
+                        axum::http::StatusCode::UNAUTHORIZED,
+                        axum::Json(serde_json::json!({
+                            "success": false,
+                            "error": "unauthorized",
+                            "message": "Authentication required"
+                        })),
+                    )
+                        .into_response(),
                 }
             }
-        }))
+        },
+    ))
 }

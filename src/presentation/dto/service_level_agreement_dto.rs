@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::ServiceLevelAgreement;
 use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::ServiceLevelAgreement;
 use crate::domain::entity::ServiceLevelAgreementStatus;
 
 // =============================================================================
@@ -33,9 +33,6 @@ use crate::domain::entity::ServiceLevelAgreementStatus;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateServiceLevelAgreementDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 140)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
@@ -58,9 +55,6 @@ pub struct CreateServiceLevelAgreementDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateServiceLevelAgreementDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 140)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
@@ -83,9 +77,6 @@ pub struct UpdateServiceLevelAgreementDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchServiceLevelAgreementDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 140)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -100,7 +91,7 @@ pub struct PatchServiceLevelAgreementDto {
 impl PatchServiceLevelAgreementDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some() || self.name.is_some() || self.is_default.is_some() || self.status.is_some()
+        self.name.is_some() || self.is_default.is_some() || self.status.is_some()
     }
 }
 
@@ -116,10 +107,11 @@ impl PatchServiceLevelAgreementDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ServiceLevelAgreementResponseDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "openapi", schema(example = true))]
@@ -158,7 +150,12 @@ pub struct ServiceLevelAgreementListResponseDto {
 
 impl ServiceLevelAgreementListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(items: Vec<ServiceLevelAgreementResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
+    pub fn new(
+        items: Vec<ServiceLevelAgreementResponseDto>,
+        total: u64,
+        page: u32,
+        per_page: u32,
+    ) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -182,9 +179,9 @@ impl ServiceLevelAgreementListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct ServiceLevelAgreementSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: String,
     pub is_default: bool,
+    pub status: ServiceLevelAgreementStatus,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -196,7 +193,6 @@ impl From<ServiceLevelAgreement> for ServiceLevelAgreementResponseDto {
     fn from(entity: ServiceLevelAgreement) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             is_default: entity.is_default,
             status: entity.status,
@@ -210,9 +206,9 @@ impl From<ServiceLevelAgreement> for ServiceLevelAgreementSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             is_default: entity.is_default,
+            status: entity.status,
             created_at,
         }
     }
@@ -222,7 +218,6 @@ impl From<CreateServiceLevelAgreementDto> for ServiceLevelAgreement {
     fn from(dto: CreateServiceLevelAgreementDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             name: dto.name,
             is_default: dto.is_default,
             status: dto.status,
@@ -235,7 +230,6 @@ impl From<&ServiceLevelAgreement> for ServiceLevelAgreementResponseDto {
     fn from(entity: &ServiceLevelAgreement) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             name: entity.name.clone(),
             is_default: entity.is_default.clone(),
             status: entity.status.clone(),
@@ -251,8 +245,10 @@ impl backbone_core::FromCreateDto<CreateServiceLevelAgreementDto> for ServiceLev
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateServiceLevelAgreementDto> for ServiceLevelAgreement {
-    fn apply_update(mut self, dto: UpdateServiceLevelAgreementDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
+    fn apply_update(
+        mut self,
+        dto: UpdateServiceLevelAgreementDto,
+    ) -> backbone_core::ServiceResult<Self> {
         self.name = dto.name;
         self.is_default = dto.is_default;
         self.status = dto.status;
