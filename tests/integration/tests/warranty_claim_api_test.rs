@@ -24,7 +24,6 @@ impl TestDataGenerator for WarrantyClaimTestData {
         let now = Utc::now().to_rfc3339();
         json!({
             "id": Uuid::new_v4().to_string(),
-            "company_id": Uuid::new_v4().to_string(),
             "customer_id": null,
             "item_id": Uuid::new_v4().to_string(),
             "serial_no": null,
@@ -43,7 +42,6 @@ impl TestDataGenerator for WarrantyClaimTestData {
         let now = Utc::now().to_rfc3339();
         json!({
             "id": id,
-            "company_id": Uuid::new_v4().to_string(),
             "customer_id": null,
             "item_id": Uuid::new_v4().to_string(),
             "serial_no": null,

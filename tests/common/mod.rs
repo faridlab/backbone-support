@@ -7,8 +7,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use backbone_support::application::service::support_events::{SupportEvent, SupportEventSink};
 pub use backbone_support::application::service::support_events::LoggingSink;
+use backbone_support::application::service::support_events::{SupportEvent, SupportEventSink};
 use backbone_support::application::service::support_ports::{
     ProjectAck, ProjectFromIssue, ProjectPort, SupportRejected,
 };
@@ -26,6 +26,24 @@ pub async fn pool() -> PgPool {
 /// A fixed UTC timestamp from an RFC3339 string (e.g. `dt("2026-07-07T09:00:00Z")`).
 pub fn dt(s: &str) -> DateTime<Utc> {
     DateTime::parse_from_rfc3339(s).unwrap().with_timezone(&Utc)
+}
+
+/// Run `f` inside a company-anchored org request scope. The escalation seam sources the
+/// sibling port's legacy owner-company key from the ambient scope (composition-installed
+/// tenancy, ADR-0029) and fails closed when no scope carrying a company node is bound —
+/// probes that drive the seam bind one here.
+pub async fn with_company_scope<R, F: std::future::Future<Output = R>>(
+    pool: &sqlx::PgPool,
+    company: Uuid,
+    f: F,
+) -> R {
+    backbone_orm::org_scope::with_org_request_scope(
+        pool,
+        backbone_orm::org_scope::OrgScope::for_company_unit(company),
+        f,
+    )
+    .await
+    .expect("org request scope")
 }
 
 /// A sink that records every published support event.
@@ -63,7 +81,10 @@ impl FakeProject {
 }
 #[async_trait::async_trait]
 impl ProjectPort for FakeProject {
-    async fn open_delivery_project(&self, req: &ProjectFromIssue) -> Result<ProjectAck, SupportRejected> {
+    async fn open_delivery_project(
+        &self,
+        req: &ProjectFromIssue,
+    ) -> Result<ProjectAck, SupportRejected> {
         *self.calls.lock().unwrap() += 1;
         let mut m = self.opened.lock().unwrap();
         let pid = *m.entry(req.issue_id).or_insert_with(Uuid::new_v4);
@@ -79,7 +100,10 @@ pub struct RealProject {
 }
 #[async_trait::async_trait]
 impl ProjectPort for RealProject {
-    async fn open_delivery_project(&self, req: &ProjectFromIssue) -> Result<ProjectAck, SupportRejected> {
+    async fn open_delivery_project(
+        &self,
+        req: &ProjectFromIssue,
+    ) -> Result<ProjectAck, SupportRejected> {
         use backbone_project::application::service::project_write_service::NewProject;
         let name = format!("Support ISSUE-{} — {}", req.issue_id, req.subject);
         // Idempotent: if a project already exists for this issue, return it.
@@ -90,15 +114,21 @@ impl ProjectPort for RealProject {
         if let Some(id) = existing {
             return Ok(ProjectAck { project_id: id });
         }
-        let res = self.svc.create_project(NewProject {
-            company_id: req.company_id,
-            project_name: name,
-            project_type: "external".into(),
-            customer_id: Some(req.customer_id),
-            source_so_id: None,
-            currency: None,
-        }).await;
+        let res = self
+            .svc
+            .create_project(NewProject {
+                company_id: req.company_id,
+                project_name: name,
+                project_type: "external".into(),
+                customer_id: Some(req.customer_id),
+                source_so_id: None,
+                currency: None,
+            })
+            .await;
         res.map(|id| ProjectAck { project_id: id })
-            .map_err(|e| SupportRejected { code: "project_rejected".into(), message: format!("{e:?}") })
+            .map_err(|e| SupportRejected {
+                code: "project_rejected".into(),
+                message: format!("{e:?}"),
+            })
     }
 }

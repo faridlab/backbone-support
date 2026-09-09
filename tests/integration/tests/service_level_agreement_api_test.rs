@@ -24,7 +24,6 @@ impl TestDataGenerator for ServiceLevelAgreementTestData {
         let now = Utc::now().to_rfc3339();
         json!({
             "id": Uuid::new_v4().to_string(),
-            "company_id": Uuid::new_v4().to_string(),
             "name": format!("Test {}", Uuid::new_v4().to_string().split('-').next().unwrap()),
             "is_default": false,
             "status": "active",
@@ -36,7 +35,6 @@ impl TestDataGenerator for ServiceLevelAgreementTestData {
         let now = Utc::now().to_rfc3339();
         json!({
             "id": id,
-            "company_id": Uuid::new_v4().to_string(),
             "name": format!("Test {}", Uuid::new_v4().to_string().split('-').next().unwrap()),
             "is_default": false,
             "status": "active",
@@ -62,7 +60,8 @@ pub struct ServiceLevelAgreementApiTest {
 
 impl ServiceLevelAgreementApiTest {
     pub fn new() -> Self {
-        let mut config = CrudTestConfig::new("/api/v1/service_level_agreements", "ServiceLevelAgreement");
+        let mut config =
+            CrudTestConfig::new("/api/v1/service_level_agreements", "ServiceLevelAgreement");
         config.supports_soft_delete = true;
         Self {
             inner: GenericCrudTest::new(config, ServiceLevelAgreementTestData),
