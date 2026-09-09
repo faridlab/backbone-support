@@ -27,6 +27,10 @@ user_owned:
   - "tests/support_golden_cases.rs"
   - "scripts/**"
   - "tests/escalation_outbox_durability.rs"
+  # Hand-authored migration (the guarded company-artifact strip — the strip's ordering guard
+  # is hand-authored logic, not schema-derived emission).
+  - "migrations/20260909104525_strip_tenancy.up.sql"
+  - "migrations/20260909104525_strip_tenancy.down.sql"
   # Hand-authored behavior (services + their HTTP surface). Examples:
   # - "src/application/service/onboarding_service.rs"
   # - "src/presentation/http/guarded_routes.rs"

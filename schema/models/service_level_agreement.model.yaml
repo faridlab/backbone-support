@@ -16,10 +16,6 @@ models:
         type: uuid
         attributes: ["@id", "@default(uuid)"]
         description: "Unique SLA id"
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Org owner # logical FK to organization.Company.id"
       name:
         type: string
         attributes: ["@required", "@max(140)"]
@@ -27,7 +23,7 @@ models:
       is_default:
         type: boolean
         attributes: ["@default(false)"]
-        description: "Applied to an issue that names no SLA (at most one default per company)"
+        description: "Applied to an issue that names no SLA (at most one default per deployment scope; the composing service's tenancy descriptor installs the per-unit unique — ADR-0029)"
       # replaces is_active (boolean flipped to lifecycle enum)
       status:
         type: ServiceLevelAgreementStatus
@@ -37,9 +33,12 @@ models:
         type: Metadata
         attributes: ["@audit_metadata"]
         description: "Audit metadata"
+    # No tenancy indexes (ADR-0029): the module is tenant-agnostic. The default-SLA
+    # lookup rides a tenant-free index; per-unit scoping indexes are installed by the
+    # composing service's tenancy decorator, not declared here.
     indexes:
       - type: index
-        fields: [company_id, status]
+        fields: [status]
 
   - name: ServiceLevelPriority
     collection: service_level_priorities
@@ -53,10 +52,6 @@ models:
         type: uuid
         attributes: ["@required", "@foreign_key(ServiceLevelAgreement.id)"]
         description: "Parent SLA"
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Org owner # logical FK to organization.Company.id (ADR-0010 fence)"
       priority:
         type: IssuePriority
         attributes: ["@required"]
