@@ -7,7 +7,7 @@ info:
     This API provides 11 standard CRUD endpoints for each model.
 
 servers:
-  - url: http://localhost:3000
+  - url: /
     description: Development server
 
 tags:
@@ -21,7 +21,7 @@ tags:
     description: WarrantyClaim management endpoints
 
 paths:
-  /api/v1/issues:
+  /api/v1/support/issues:
     get:
       tags:
         - Issues
@@ -67,7 +67,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/issues/{id}:
+  /api/v1/support/issues/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -139,7 +139,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/issues/bulk:
+  /api/v1/support/issues/bulk:
     post:
       tags:
         - Issues
@@ -231,7 +231,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/issues/upsert:
+  /api/v1/support/issues/upsert:
     post:
       tags:
         - Issues
@@ -261,7 +261,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Issue'
 
-  /api/v1/issues/trash:
+  /api/v1/support/issues/trash:
     get:
       tags:
         - Issues
@@ -278,7 +278,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/IssueList'
 
-  /api/v1/issues/{id}/restore:
+  /api/v1/support/issues/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -296,7 +296,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/issues/empty:
+  /api/v1/support/issues/empty:
     delete:
       tags:
         - Issues
@@ -313,7 +313,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/issues/delete/bulk:
+  /api/v1/support/issues/delete/bulk:
     post:
       tags:
         - Issues
@@ -333,7 +333,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/issues/restore/bulk:
+  /api/v1/support/issues/restore/bulk:
     post:
       tags:
         - Issues
@@ -351,7 +351,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/issues/restore/all:
+  /api/v1/support/issues/restore/all:
     post:
       tags:
         - Issues
@@ -367,7 +367,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/issues/trash/bulk:
+  /api/v1/support/issues/trash/bulk:
     delete:
       tags:
         - Issues
@@ -387,7 +387,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_agreements:
+  /api/v1/support/service_level_agreements:
     get:
       tags:
         - ServiceLevelAgreements
@@ -433,7 +433,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/service_level_agreements/{id}:
+  /api/v1/support/service_level_agreements/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -505,7 +505,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/service_level_agreements/bulk:
+  /api/v1/support/service_level_agreements/bulk:
     post:
       tags:
         - ServiceLevelAgreements
@@ -597,7 +597,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_agreements/upsert:
+  /api/v1/support/service_level_agreements/upsert:
     post:
       tags:
         - ServiceLevelAgreements
@@ -627,7 +627,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceLevelAgreement'
 
-  /api/v1/service_level_agreements/trash:
+  /api/v1/support/service_level_agreements/trash:
     get:
       tags:
         - ServiceLevelAgreements
@@ -644,7 +644,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceLevelAgreementList'
 
-  /api/v1/service_level_agreements/{id}/restore:
+  /api/v1/support/service_level_agreements/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -662,7 +662,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/service_level_agreements/empty:
+  /api/v1/support/service_level_agreements/empty:
     delete:
       tags:
         - ServiceLevelAgreements
@@ -679,7 +679,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/service_level_agreements/delete/bulk:
+  /api/v1/support/service_level_agreements/delete/bulk:
     post:
       tags:
         - ServiceLevelAgreements
@@ -699,7 +699,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_agreements/restore/bulk:
+  /api/v1/support/service_level_agreements/restore/bulk:
     post:
       tags:
         - ServiceLevelAgreements
@@ -717,7 +717,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_agreements/restore/all:
+  /api/v1/support/service_level_agreements/restore/all:
     post:
       tags:
         - ServiceLevelAgreements
@@ -733,7 +733,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/service_level_agreements/trash/bulk:
+  /api/v1/support/service_level_agreements/trash/bulk:
     delete:
       tags:
         - ServiceLevelAgreements
@@ -753,7 +753,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_priorities:
+  /api/v1/support/service_level_priorities:
     get:
       tags:
         - ServiceLevelPriorities
@@ -799,7 +799,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/service_level_priorities/{id}:
+  /api/v1/support/service_level_priorities/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -871,7 +871,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/service_level_priorities/bulk:
+  /api/v1/support/service_level_priorities/bulk:
     post:
       tags:
         - ServiceLevelPriorities
@@ -963,7 +963,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_priorities/upsert:
+  /api/v1/support/service_level_priorities/upsert:
     post:
       tags:
         - ServiceLevelPriorities
@@ -993,7 +993,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceLevelPriority'
 
-  /api/v1/service_level_priorities/trash:
+  /api/v1/support/service_level_priorities/trash:
     get:
       tags:
         - ServiceLevelPriorities
@@ -1010,7 +1010,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceLevelPriorityList'
 
-  /api/v1/service_level_priorities/{id}/restore:
+  /api/v1/support/service_level_priorities/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1028,7 +1028,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/service_level_priorities/empty:
+  /api/v1/support/service_level_priorities/empty:
     delete:
       tags:
         - ServiceLevelPriorities
@@ -1045,7 +1045,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/service_level_priorities/delete/bulk:
+  /api/v1/support/service_level_priorities/delete/bulk:
     post:
       tags:
         - ServiceLevelPriorities
@@ -1065,7 +1065,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_priorities/restore/bulk:
+  /api/v1/support/service_level_priorities/restore/bulk:
     post:
       tags:
         - ServiceLevelPriorities
@@ -1083,7 +1083,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/service_level_priorities/restore/all:
+  /api/v1/support/service_level_priorities/restore/all:
     post:
       tags:
         - ServiceLevelPriorities
@@ -1099,7 +1099,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/service_level_priorities/trash/bulk:
+  /api/v1/support/service_level_priorities/trash/bulk:
     delete:
       tags:
         - ServiceLevelPriorities
@@ -1119,7 +1119,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/warranty_claims:
+  /api/v1/support/warranty_claims:
     get:
       tags:
         - WarrantyClaims
@@ -1165,7 +1165,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/warranty_claims/{id}:
+  /api/v1/support/warranty_claims/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -1237,7 +1237,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/warranty_claims/bulk:
+  /api/v1/support/warranty_claims/bulk:
     post:
       tags:
         - WarrantyClaims
@@ -1329,7 +1329,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/warranty_claims/upsert:
+  /api/v1/support/warranty_claims/upsert:
     post:
       tags:
         - WarrantyClaims
@@ -1359,7 +1359,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/WarrantyClaim'
 
-  /api/v1/warranty_claims/trash:
+  /api/v1/support/warranty_claims/trash:
     get:
       tags:
         - WarrantyClaims
@@ -1376,7 +1376,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/WarrantyClaimList'
 
-  /api/v1/warranty_claims/{id}/restore:
+  /api/v1/support/warranty_claims/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1394,7 +1394,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/warranty_claims/empty:
+  /api/v1/support/warranty_claims/empty:
     delete:
       tags:
         - WarrantyClaims
@@ -1411,7 +1411,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/warranty_claims/delete/bulk:
+  /api/v1/support/warranty_claims/delete/bulk:
     post:
       tags:
         - WarrantyClaims
@@ -1431,7 +1431,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/warranty_claims/restore/bulk:
+  /api/v1/support/warranty_claims/restore/bulk:
     post:
       tags:
         - WarrantyClaims
@@ -1449,7 +1449,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/warranty_claims/restore/all:
+  /api/v1/support/warranty_claims/restore/all:
     post:
       tags:
         - WarrantyClaims
@@ -1465,7 +1465,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/warranty_claims/trash/bulk:
+  /api/v1/support/warranty_claims/trash/bulk:
     delete:
       tags:
         - WarrantyClaims
