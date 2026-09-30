@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AgreementStatus;
-use super::AuditMetadata;
 use super::IssuePriority;
 use super::IssueStatus;
+use super::AgreementStatus;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for Issue
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -14,15 +14,9 @@ use super::IssueStatus;
 pub struct IssueId(pub Uuid);
 
 impl IssueId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for IssueId {
@@ -39,28 +33,20 @@ impl std::str::FromStr for IssueId {
 }
 
 impl From<Uuid> for IssueId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<IssueId> for Uuid {
-    fn from(id: IssueId) -> Self {
-        id.0
-    }
+    fn from(id: IssueId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for IssueId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for IssueId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -94,15 +80,7 @@ impl Issue {
     }
 
     /// Create a new Issue with required fields
-    pub fn new(
-        subject: String,
-        priority: IssuePriority,
-        status: IssueStatus,
-        agreement_status: AgreementStatus,
-        opened_at: DateTime<Utc>,
-        response_breached: bool,
-        total_paused_mins: i32,
-    ) -> Self {
+    pub fn new(subject: String, priority: IssuePriority, status: IssueStatus, agreement_status: AgreementStatus, opened_at: DateTime<Utc>, response_breached: bool, total_paused_mins: i32) -> Self {
         Self {
             id: Uuid::new_v4(),
             customer_id: None,
@@ -180,6 +158,7 @@ impl Issue {
         &self.status
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -247,84 +226,52 @@ impl Issue {
         for (key, value) in fields {
             match key.as_str() {
                 "customer_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.customer_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.customer_id = v; }
                 }
                 "subject" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.subject = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.subject = v; }
                 }
                 "description" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.description = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.description = v; }
                 }
                 "priority" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.priority = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.priority = v; }
                 }
                 "sla_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.sla_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.sla_id = v; }
                 }
                 "status" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.status = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.status = v; }
                 }
                 "agreement_status" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.agreement_status = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.agreement_status = v; }
                 }
                 "opened_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.opened_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.opened_at = v; }
                 }
                 "response_by" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.response_by = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.response_by = v; }
                 }
                 "resolution_by" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.resolution_by = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.resolution_by = v; }
                 }
                 "first_responded_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.first_responded_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.first_responded_at = v; }
                 }
                 "response_breached" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.response_breached = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.response_breached = v; }
                 }
                 "resolved_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.resolved_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.resolved_at = v; }
                 }
                 "paused_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.paused_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.paused_at = v; }
                 }
                 "total_paused_mins" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.total_paused_mins = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.total_paused_mins = v; }
                 }
                 "escalated_project_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.escalated_project_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.escalated_project_id = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -385,10 +332,13 @@ impl backbone_orm::EntityRepoMeta for Issue {
         m.insert("escalated_project_id".to_string(), "uuid".to_string());
         m.insert("priority".to_string(), "issue_priority".to_string());
         m.insert("status".to_string(), "issue_status".to_string());
-        m.insert(
-            "agreement_status".to_string(),
-            "agreement_status".to_string(),
-        );
+        m.insert("agreement_status".to_string(), "agreement_status".to_string());
+        m.insert("opened_at".to_string(), "timestamptz".to_string());
+        m.insert("response_by".to_string(), "timestamptz".to_string());
+        m.insert("resolution_by".to_string(), "timestamptz".to_string());
+        m.insert("first_responded_at".to_string(), "timestamptz".to_string());
+        m.insert("resolved_at".to_string(), "timestamptz".to_string());
+        m.insert("paused_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
@@ -521,12 +471,8 @@ impl IssueBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<Issue, String> {
-        let subject = self
-            .subject
-            .ok_or_else(|| "subject is required".to_string())?;
-        let opened_at = self
-            .opened_at
-            .ok_or_else(|| "opened_at is required".to_string())?;
+        let subject = self.subject.ok_or_else(|| "subject is required".to_string())?;
+        let opened_at = self.opened_at.ok_or_else(|| "opened_at is required".to_string())?;
 
         Ok(Issue {
             id: Uuid::new_v4(),

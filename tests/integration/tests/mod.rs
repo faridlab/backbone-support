@@ -12,7 +12,6 @@ pub mod service_level_priority_api_test;
 pub mod warranty_claim_api_test;
 
 // Re-exports for convenience
-pub use crud_test_base::*;
 pub use issue_api_test::*;
 pub use service_level_agreement_api_test::*;
 pub use service_level_priority_api_test::*;

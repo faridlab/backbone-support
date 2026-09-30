@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the ServiceLevelAgreement aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 
 use crate::domain::entity::{ServiceLevelAgreement, ServiceLevelAgreementStatus};
 
@@ -61,6 +61,7 @@ impl ServiceLevelAgreementFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ServiceLevelAgreementRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -75,11 +76,7 @@ pub trait ServiceLevelAgreementRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<ServiceLevelAgreement>>;
 
     /// Update service_level_agreement by ID
-    async fn update(
-        &self,
-        id: &str,
-        entity: &ServiceLevelAgreement,
-    ) -> Result<Option<ServiceLevelAgreement>>;
+    async fn update(&self, id: &str, entity: &ServiceLevelAgreement) -> Result<Option<ServiceLevelAgreement>>;
 
     /// Delete service_level_agreement by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -89,17 +86,10 @@ pub trait ServiceLevelAgreementRepository: Send + Sync {
     // =========================================================================
 
     /// List service_level_agreement with pagination
-    async fn list(
-        &self,
-        params: ServiceLevelAgreementPaginationParams,
-    ) -> Result<ServiceLevelAgreementPaginatedResult>;
+    async fn list(&self, params: ServiceLevelAgreementPaginationParams) -> Result<ServiceLevelAgreementPaginatedResult>;
 
     /// List service_level_agreement with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ServiceLevelAgreementPaginationParams,
-        filters: ServiceLevelAgreementFilter,
-    ) -> Result<ServiceLevelAgreementPaginatedResult>;
+    async fn list_with_filters(&self, params: ServiceLevelAgreementPaginationParams, filters: ServiceLevelAgreementFilter) -> Result<ServiceLevelAgreementPaginatedResult>;
 
     /// Count all service_level_agreement entities
     async fn count(&self) -> Result<u64>;
@@ -121,10 +111,7 @@ pub trait ServiceLevelAgreementRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ServiceLevelAgreement>>;
 
     /// List soft-deleted service_level_agreement entities
-    async fn list_deleted(
-        &self,
-        params: ServiceLevelAgreementPaginationParams,
-    ) -> Result<ServiceLevelAgreementPaginatedResult>;
+    async fn list_deleted(&self, params: ServiceLevelAgreementPaginationParams) -> Result<ServiceLevelAgreementPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;
@@ -134,10 +121,7 @@ pub trait ServiceLevelAgreementRepository: Send + Sync {
     // =========================================================================
 
     /// Bulk save service_level_agreement entities
-    async fn bulk_save(
-        &self,
-        entities: &[ServiceLevelAgreement],
-    ) -> Result<Vec<ServiceLevelAgreement>>;
+    async fn bulk_save(&self, entities: &[ServiceLevelAgreement]) -> Result<Vec<ServiceLevelAgreement>>;
 
     /// Bulk delete by IDs
     async fn bulk_delete(&self, ids: &[&str]) -> Result<u64>;

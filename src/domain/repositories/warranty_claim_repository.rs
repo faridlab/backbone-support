@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the WarrantyClaim aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::{WarrantyClaim, WarrantyStatus};
@@ -57,14 +57,7 @@ pub struct WarrantyClaimFilter {
 impl WarrantyClaimFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.customer_id.is_some()
-            || self.item_id.is_some()
-            || self.serial_no.is_some()
-            || self.is_under_warranty.is_some()
-            || self.status.is_some()
-            || self.issue_id.is_some()
-            || self.description.is_some()
-            || self.resolution.is_some()
+        self.customer_id.is_some() || self.item_id.is_some() || self.serial_no.is_some() || self.is_under_warranty.is_some() || self.status.is_some() || self.issue_id.is_some() || self.description.is_some() || self.resolution.is_some()
     }
 }
 
@@ -74,6 +67,7 @@ impl WarrantyClaimFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait WarrantyClaimRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -98,17 +92,10 @@ pub trait WarrantyClaimRepository: Send + Sync {
     // =========================================================================
 
     /// List warranty_claim with pagination
-    async fn list(
-        &self,
-        params: WarrantyClaimPaginationParams,
-    ) -> Result<WarrantyClaimPaginatedResult>;
+    async fn list(&self, params: WarrantyClaimPaginationParams) -> Result<WarrantyClaimPaginatedResult>;
 
     /// List warranty_claim with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: WarrantyClaimPaginationParams,
-        filters: WarrantyClaimFilter,
-    ) -> Result<WarrantyClaimPaginatedResult>;
+    async fn list_with_filters(&self, params: WarrantyClaimPaginationParams, filters: WarrantyClaimFilter) -> Result<WarrantyClaimPaginatedResult>;
 
     /// Count all warranty_claim entities
     async fn count(&self) -> Result<u64>;
@@ -130,10 +117,7 @@ pub trait WarrantyClaimRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<WarrantyClaim>>;
 
     /// List soft-deleted warranty_claim entities
-    async fn list_deleted(
-        &self,
-        params: WarrantyClaimPaginationParams,
-    ) -> Result<WarrantyClaimPaginatedResult>;
+    async fn list_deleted(&self, params: WarrantyClaimPaginationParams) -> Result<WarrantyClaimPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

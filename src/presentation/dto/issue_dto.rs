@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,9 +16,9 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AgreementStatus;
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::Issue;
+use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::AgreementStatus;
 use crate::domain::entity::IssuePriority;
 use crate::domain::entity::IssueStatus;
 
@@ -35,11 +35,7 @@ use crate::domain::entity::IssueStatus;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateIssueDto {
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "customer_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "customer_id")]
     pub customer_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
@@ -56,43 +52,23 @@ pub struct CreateIssueDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "opened_at")]
     pub opened_at: DateTime<Utc>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "response_by"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "response_by")]
     pub response_by: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "resolution_by"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "resolution_by")]
     pub resolution_by: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "first_responded_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "first_responded_at")]
     pub first_responded_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "response_breached")]
     pub response_breached: bool,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "resolved_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "resolved_at")]
     pub resolved_at: Option<DateTime<Utc>>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "paused_at")]
     pub paused_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "total_paused_mins")]
     pub total_paused_mins: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "escalated_project_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "escalated_project_id")]
     pub escalated_project_id: Option<Uuid>,
 }
 
@@ -109,11 +85,7 @@ pub struct CreateIssueDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateIssueDto {
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "customer_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "customer_id")]
     pub customer_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
@@ -130,43 +102,23 @@ pub struct UpdateIssueDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "opened_at")]
     pub opened_at: DateTime<Utc>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "response_by"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "response_by")]
     pub response_by: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "resolution_by"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "resolution_by")]
     pub resolution_by: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "first_responded_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "first_responded_at")]
     pub first_responded_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "response_breached")]
     pub response_breached: bool,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "resolved_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "resolved_at")]
     pub resolved_at: Option<DateTime<Utc>>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "paused_at")]
     pub paused_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "total_paused_mins")]
     pub total_paused_mins: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "escalated_project_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "escalated_project_id")]
     pub escalated_project_id: Option<Uuid>,
 }
 
@@ -219,32 +171,14 @@ pub struct PatchIssueDto {
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "total_paused_mins")]
     pub total_paused_mins: Option<i32>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        alias = "escalated_project_id"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "escalated_project_id")]
     pub escalated_project_id: Option<Uuid>,
 }
 
 impl PatchIssueDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.customer_id.is_some()
-            || self.subject.is_some()
-            || self.description.is_some()
-            || self.priority.is_some()
-            || self.sla_id.is_some()
-            || self.status.is_some()
-            || self.agreement_status.is_some()
-            || self.opened_at.is_some()
-            || self.response_by.is_some()
-            || self.resolution_by.is_some()
-            || self.first_responded_at.is_some()
-            || self.response_breached.is_some()
-            || self.resolved_at.is_some()
-            || self.paused_at.is_some()
-            || self.total_paused_mins.is_some()
-            || self.escalated_project_id.is_some()
+        self.customer_id.is_some() || self.subject.is_some() || self.description.is_some() || self.priority.is_some() || self.sla_id.is_some() || self.status.is_some() || self.agreement_status.is_some() || self.opened_at.is_some() || self.response_by.is_some() || self.resolution_by.is_some() || self.first_responded_at.is_some() || self.response_breached.is_some() || self.resolved_at.is_some() || self.paused_at.is_some() || self.total_paused_mins.is_some() || self.escalated_project_id.is_some()
     }
 }
 
@@ -260,10 +194,7 @@ impl PatchIssueDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct IssueResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     pub customer_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]

@@ -7,10 +7,7 @@ use utoipa::ToSchema;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Type)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "snake_case")]
-#[sqlx(
-    type_name = "service_level_agreement_status",
-    rename_all = "snake_case"
-)]
+#[sqlx(type_name = "service_level_agreement_status", rename_all = "snake_case")]
 pub enum ServiceLevelAgreementStatus {
     Active,
     Inactive,
@@ -32,10 +29,7 @@ impl FromStr for ServiceLevelAgreementStatus {
         match s.to_lowercase().as_str() {
             "active" => Ok(Self::Active),
             "inactive" => Ok(Self::Inactive),
-            _ => Err(format!(
-                "Unknown ServiceLevelAgreementStatus variant: {}",
-                s
-            )),
+            _ => Err(format!("Unknown ServiceLevelAgreementStatus variant: {}", s)),
         }
     }
 }

@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ServiceLevelAgreement;
+use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ServiceLevelAgreementStatus;
 
 // =============================================================================
@@ -107,10 +107,7 @@ impl PatchServiceLevelAgreementDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ServiceLevelAgreementResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
@@ -150,12 +147,7 @@ pub struct ServiceLevelAgreementListResponseDto {
 
 impl ServiceLevelAgreementListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<ServiceLevelAgreementResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<ServiceLevelAgreementResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -245,10 +237,7 @@ impl backbone_core::FromCreateDto<CreateServiceLevelAgreementDto> for ServiceLev
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateServiceLevelAgreementDto> for ServiceLevelAgreement {
-    fn apply_update(
-        mut self,
-        dto: UpdateServiceLevelAgreementDto,
-    ) -> backbone_core::ServiceResult<Self> {
+    fn apply_update(mut self, dto: UpdateServiceLevelAgreementDto) -> backbone_core::ServiceResult<Self> {
         self.name = dto.name;
         self.is_default = dto.is_default;
         self.status = dto.status;

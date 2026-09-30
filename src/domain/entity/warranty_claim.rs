@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
 use super::WarrantyStatus;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for WarrantyClaim
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,15 +12,9 @@ use super::WarrantyStatus;
 pub struct WarrantyClaimId(pub Uuid);
 
 impl WarrantyClaimId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for WarrantyClaimId {
@@ -37,28 +31,20 @@ impl std::str::FromStr for WarrantyClaimId {
 }
 
 impl From<Uuid> for WarrantyClaimId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<WarrantyClaimId> for Uuid {
-    fn from(id: WarrantyClaimId) -> Self {
-        id.0
-    }
+    fn from(id: WarrantyClaimId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for WarrantyClaimId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for WarrantyClaimId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -86,12 +72,7 @@ impl WarrantyClaim {
     }
 
     /// Create a new WarrantyClaim with required fields
-    pub fn new(
-        item_id: Uuid,
-        claim_date: DateTime<Utc>,
-        is_under_warranty: bool,
-        status: WarrantyStatus,
-    ) -> Self {
+    pub fn new(item_id: Uuid, claim_date: DateTime<Utc>, is_under_warranty: bool, status: WarrantyStatus) -> Self {
         Self {
             id: Uuid::new_v4(),
             customer_id: None,
@@ -163,6 +144,7 @@ impl WarrantyClaim {
         &self.status
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -212,54 +194,34 @@ impl WarrantyClaim {
         for (key, value) in fields {
             match key.as_str() {
                 "customer_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.customer_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.customer_id = v; }
                 }
                 "item_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.item_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.item_id = v; }
                 }
                 "serial_no" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.serial_no = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.serial_no = v; }
                 }
                 "claim_date" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.claim_date = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.claim_date = v; }
                 }
                 "warranty_expiry" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.warranty_expiry = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.warranty_expiry = v; }
                 }
                 "is_under_warranty" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.is_under_warranty = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.is_under_warranty = v; }
                 }
                 "status" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.status = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.status = v; }
                 }
                 "issue_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.issue_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.issue_id = v; }
                 }
                 "description" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.description = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.description = v; }
                 }
                 "resolution" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.resolution = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.resolution = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -319,6 +281,8 @@ impl backbone_orm::EntityRepoMeta for WarrantyClaim {
         m.insert("item_id".to_string(), "uuid".to_string());
         m.insert("issue_id".to_string(), "uuid".to_string());
         m.insert("status".to_string(), "warranty_status".to_string());
+        m.insert("claim_date".to_string(), "timestamptz".to_string());
+        m.insert("warranty_expiry".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
@@ -409,12 +373,8 @@ impl WarrantyClaimBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<WarrantyClaim, String> {
-        let item_id = self
-            .item_id
-            .ok_or_else(|| "item_id is required".to_string())?;
-        let claim_date = self
-            .claim_date
-            .ok_or_else(|| "claim_date is required".to_string())?;
+        let item_id = self.item_id.ok_or_else(|| "item_id is required".to_string())?;
+        let claim_date = self.claim_date.ok_or_else(|| "claim_date is required".to_string())?;
 
         Ok(WarrantyClaim {
             id: Uuid::new_v4(),

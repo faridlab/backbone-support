@@ -4,12 +4,11 @@
 //!
 //! Tests the ServiceLevelPriority CRUD API endpoints.
 
-use chrono::Utc;
+use crate::integration::framework::ApiTest;
 use serde_json::{json, Value};
 use uuid::Uuid;
 
 use super::crud_test_base::{CrudTestConfig, GenericCrudTest, TestDataGenerator};
-use crate::integration::framework::ApiTest;
 use crate::integration::helpers::CommonUtils;
 
 // ============================================================================
@@ -21,7 +20,6 @@ pub struct ServiceLevelPriorityTestData;
 
 impl TestDataGenerator for ServiceLevelPriorityTestData {
     fn generate_create_payload(&self, _utils: &CommonUtils) -> Value {
-        let now = Utc::now().to_rfc3339();
         json!({
             "id": Uuid::new_v4().to_string(),
             "sla_id": Uuid::new_v4().to_string(),
@@ -33,7 +31,6 @@ impl TestDataGenerator for ServiceLevelPriorityTestData {
     }
 
     fn generate_update_payload(&self, id: &str, _utils: &CommonUtils) -> Value {
-        let now = Utc::now().to_rfc3339();
         json!({
             "id": id,
             "sla_id": Uuid::new_v4().to_string(),
@@ -52,13 +49,7 @@ impl TestDataGenerator for ServiceLevelPriorityTestData {
 
     async fn seed_dependencies(&self, api: &ApiTest) -> Vec<(String, String)> {
         let mut deps: Vec<(String, String)> = Vec::new();
-        if let Some(id) = super::crud_test_base::create_and_get_id(
-            api,
-            "/api/v1/service_level_agreements",
-            &super::service_level_agreement_api_test::ServiceLevelAgreementTestData,
-        )
-        .await
-        {
+        if let Some(id) = super::crud_test_base::create_and_get_id(api, "/api/v1/service_level_agreements", &super::service_level_agreement_api_test::ServiceLevelAgreementTestData).await {
             deps.push(("sla_id".to_string(), id));
         }
         deps
@@ -76,8 +67,7 @@ pub struct ServiceLevelPriorityApiTest {
 
 impl ServiceLevelPriorityApiTest {
     pub fn new() -> Self {
-        let mut config =
-            CrudTestConfig::new("/api/v1/service_level_priorities", "ServiceLevelPriority");
+        let mut config = CrudTestConfig::new("/api/v1/service_level_priorities", "ServiceLevelPriority");
         config.supports_soft_delete = true;
         Self {
             inner: GenericCrudTest::new(config, ServiceLevelPriorityTestData),
