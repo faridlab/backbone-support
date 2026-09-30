@@ -23,6 +23,7 @@ user_owned:
   - "src/infrastructure/persistence/service_level_priority_repository.rs"
   - "src/infrastructure/persistence/warranty_claim_repository.rs"
   - "tests/integrity_probes.rs"
+  - "tests/common/mod.rs"
   - "tests/support_escalation_seam.rs"
   - "tests/support_golden_cases.rs"
   - "scripts/**"
