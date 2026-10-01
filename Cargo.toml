@@ -1,8 +1,8 @@
 [package]
 name = "backbone-support"
-version = "0.6.15"
+version = "0.6.16"
 edition = "2021"
-description = "Minimal Backbone Framework module skeleton"
+description = "Customer support: issues tracked against service level agreements, and warranty claims"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/faridlab/backbone-support"
 exclude = [".claude/", ".github/", "graphify-out/"]
