@@ -96,5 +96,5 @@ rand = "0.8"
 # TEST-ONLY edge: the escalation seam drives the REAL backbone-project (open a delivery Project) through
 # the ProjectPort. Dev-dependency ONLY -- the shipped support library has ZERO normal Cargo edge to
 # backbone-project (the two Tier-4 modules stay independent).
-backbone-project = { path = "../backbone-project" }
+backbone-project = { version = "0.5.22" }
 
