@@ -1,6 +1,6 @@
 [package]
 name = "backbone-support"
-version = "0.6.16"
+version = "0.7.0"
 edition = "2021"
 description = "Customer support: issues tracked against service level agreements, and warranty claims"
 license = "MIT OR Apache-2.0"
@@ -11,7 +11,7 @@ exclude = [".claude/", ".github/", "graphify-out/"]
 path = "src/lib.rs"
 
 [dependencies]
-backbone-outbox = { version = "2.7.35", features = ["multi_tenant"] }
+backbone-outbox = { version = "3.0.0", features = ["multi_tenant"] }
 # -----------------------------------------------------------------------------
 # Backbone Framework crates
 #
@@ -21,10 +21,10 @@ backbone-outbox = { version = "2.7.35", features = ["multi_tenant"] }
 # or `rev = "<commit-sha>"`. Cargo dedupes the git fetch — the repo is only
 # cloned once even though four crates reference it.
 # -----------------------------------------------------------------------------
-backbone-core = { version = "2.7.35", features = ["postgres"] }
-backbone-orm = { version = "2.7.35" }
-backbone-auth = { version = "2.7.35", features = ["axum"] }
-backbone-messaging = { version = "2.7.35" }
+backbone-core = { version = "3.0.0", features = ["postgres"] }
+backbone-orm = { version = "3.0.0" }
+backbone-auth = { version = "3.0.0", features = ["axum"] }
+backbone-messaging = { version = "3.0.0" }
 
 # OpenAPI schema derive. The schema generator emits ungated `use utoipa::ToSchema;`
 # in every entity and DTO file, so the dep is unconditional even though the
@@ -96,5 +96,5 @@ rand = "0.8"
 # TEST-ONLY edge: the escalation seam drives the REAL backbone-project (open a delivery Project) through
 # the ProjectPort. Dev-dependency ONLY -- the shipped support library has ZERO normal Cargo edge to
 # backbone-project (the two Tier-4 modules stay independent).
-backbone-project = { version = "0.5.22" }
+backbone-project = { version = "0.6.0" }
 
