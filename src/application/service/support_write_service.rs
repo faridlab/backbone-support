@@ -43,9 +43,9 @@ pub enum SupportError {
     Invalid(String),
     #[error("project rejected: {0}")]
     ProjectRejected(String),
-    /// The escalation seam needs the sibling's legacy owner-company key (backbone-project is
-    /// not tenant-agnostic) and the outbox mirror is company-keyed, but no org scope carrying
-    /// a company node was bound on this request. Fails closed rather than guessing a key.
+    /// No longer returned: escalation echoes the ambient company, or nil, instead of requiring
+    /// one (ADR-0029). Kept so a caller's match still compiles; removed in the next breaking
+    /// release.
     #[error("no company in the ambient org scope — escalation requires one (composition-installed tenancy, ADR-0029)")]
     NoCompanyScope,
 }
@@ -358,15 +358,13 @@ impl SupportWriteService {
         let customer_id: Uuid = issue.customer_id.ok_or(SupportError::Invalid(
             "issue has no customer to open a project for".into(),
         ))?;
-        // The delivery-project seam is a cross-module port whose sibling (backbone-project) is
-        // not tenant-agnostic: its Project rows still carry the legacy owner-company key. That
-        // key is the SIBLING's domain parameter (composition-installed tenancy, ADR-0029), not
-        // a fence of this module's — source it from the ambient org scope and fail closed when
-        // the request carries no company-anchored scope. The same key feeds the company-keyed
-        // outbox mirror row staged below.
+        // The legacy tenancy twin echo (ADR-0029): the port and the outbox record still carry a
+        // `company_id`, which gets the ambient org scope's company when the composing service
+        // bound one and nil otherwise. Nothing keys a statement on it; backbone-project takes no
+        // company, so escalation never needs one.
         let company_id = org_scope::current_org_scope()
             .and_then(|s| s.legacy_company_id())
-            .ok_or(SupportError::NoCompanyScope)?;
+            .unwrap_or(Uuid::nil());
 
         // Open the delivery project (idempotent per issue on the project side).
         let ack = project
