@@ -103,9 +103,8 @@ async fn seseam1_issue_escalates_to_real_project() {
     // Idempotent: a second escalate opened no second project.
     assert_eq!(again, project_id);
     let n: i64 = sqlx::query_scalar(
-        "SELECT count(*) FROM project.projects WHERE company_id=$1 AND customer_id=$2",
+        "SELECT count(*) FROM project.projects WHERE customer_id=$1",
     )
-    .bind(company)
     .bind(customer)
     .fetch_one(&pool)
     .await

@@ -108,8 +108,8 @@ impl ProjectPort for RealProject {
         let name = format!("Support ISSUE-{} — {}", req.issue_id, req.subject);
         // Idempotent: if a project already exists for this issue, return it.
         let existing: Option<Uuid> = sqlx::query_scalar(
-            "SELECT id FROM project.projects WHERE company_id=$1 AND project_name=$2 AND (metadata->>'deleted_at') IS NULL LIMIT 1")
-            .bind(req.company_id).bind(&name).fetch_optional(&self.pool).await
+            "SELECT id FROM project.projects WHERE project_name=$1 AND (metadata->>'deleted_at') IS NULL LIMIT 1")
+            .bind(&name).fetch_optional(&self.pool).await
             .map_err(|e| SupportRejected { code: "project_lookup_failed".into(), message: e.to_string() })?;
         if let Some(id) = existing {
             return Ok(ProjectAck { project_id: id });
@@ -117,7 +117,6 @@ impl ProjectPort for RealProject {
         let res = self
             .svc
             .create_project(NewProject {
-                company_id: req.company_id,
                 project_name: name,
                 project_type: "external".into(),
                 customer_id: Some(req.customer_id),
