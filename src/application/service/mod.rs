@@ -13,9 +13,6 @@ pub mod service_level_priority_service;
 pub mod warranty_claim_service;
 
 // <<< CUSTOM
-pub mod support_events;
-pub mod support_ports;
-pub mod support_write_service;
 // END CUSTOM
 
 pub use issue_service::IssueService;
@@ -23,11 +20,7 @@ pub use service_level_agreement_service::ServiceLevelAgreementService;
 pub use service_level_priority_service::ServiceLevelPriorityService;
 pub use warranty_claim_service::WarrantyClaimService;
 // <<< CUSTOM
-pub use support_events::{
-    IssueEscalated, IssueResolved, LoggingSink, SupportEvent, SupportEventSink, WarrantyClaimFiled,
-};
-pub use support_ports::{ProjectAck, ProjectFromIssue, ProjectPort, SupportRejected};
-pub use support_write_service::{
-    NewIssue, NewSla, NewSlaPriority, NewWarrantyClaim, SupportError, SupportWriteService,
-};
 // END CUSTOM
+
+// This directory's extension (hand-written; ADR-0031).
+include!("mod.ext.rs");
