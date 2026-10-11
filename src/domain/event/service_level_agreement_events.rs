@@ -11,8 +11,6 @@ use crate::domain::entity::ServiceLevelAgreement;
 /// enum containing a `Crud(CrudEvent<ServiceLevelAgreement>)` variant.
 pub type ServiceLevelAgreementEvent = CrudEvent<ServiceLevelAgreement>;
 
-// <<< CUSTOM
-// END CUSTOM
 
 use backbone_messaging::{CrudEventPublisher, NoOpCrudEventPublisher};
 use std::sync::Arc;

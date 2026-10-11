@@ -32,5 +32,3 @@ pub type WarrantyClaimService = GenericCrudService<
     WarrantyClaimRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

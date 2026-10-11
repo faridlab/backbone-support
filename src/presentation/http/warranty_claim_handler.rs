@@ -187,3 +187,4 @@ pub fn create_protected_warranty_claim_routes<A: AuthMiddleware + Send + Sync + 
             }
         }))
 }
+

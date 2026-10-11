@@ -18,9 +18,5 @@ pub fn issue_validator() -> IssueValidator {
         .rule(RequiredString::new("subject", |e: &Issue| &e.subject))
         .rule(OptionalNotBlank::new("description", |e: &Issue| e.description.as_deref()))
         .rule(NonNegative::new("total_paused_mins", |e: &Issue| e.total_paused_mins as i64))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

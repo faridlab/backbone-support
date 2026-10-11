@@ -403,7 +403,7 @@ impl backbone_core::ApplyUpdateDto<UpdateIssueDto> for Issue {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to Issue here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

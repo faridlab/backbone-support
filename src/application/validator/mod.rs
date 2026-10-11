@@ -15,5 +15,3 @@ pub use service_level_agreement_validator::{ServiceLevelAgreementValidator, serv
 pub use service_level_priority_validator::{ServiceLevelPriorityValidator, service_level_priority_validator};
 pub use warranty_claim_validator::{WarrantyClaimValidator, warranty_claim_validator};
 
-// <<< CUSTOM
-// END CUSTOM

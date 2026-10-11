@@ -18,5 +18,3 @@ use crate::domain::entity::ServiceLevelPriority;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type ServiceLevelPriorityDomainPolicy = PermitAllPolicy<ServiceLevelPriority>;
 
-// <<< CUSTOM
-// END CUSTOM

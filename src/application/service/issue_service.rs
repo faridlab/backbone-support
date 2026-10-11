@@ -32,5 +32,3 @@ pub type IssueService = GenericCrudService<
     IssueRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

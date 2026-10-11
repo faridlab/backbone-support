@@ -32,5 +32,3 @@ pub type ServiceLevelPriorityService = GenericCrudService<
     ServiceLevelPriorityRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

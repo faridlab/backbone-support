@@ -263,7 +263,7 @@ impl backbone_core::ApplyUpdateDto<UpdateServiceLevelPriorityDto> for ServiceLev
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to ServiceLevelPriority here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

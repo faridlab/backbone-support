@@ -20,5 +20,3 @@ pub use service_level_priority_event_handlers::ServiceLevelPriorityEventHandler;
 pub use warranty_claim_events::{WarrantyClaimEvent, WarrantyClaimEventPublisher, NoopWarrantyClaimEventPublisher};
 pub use warranty_claim_event_handlers::WarrantyClaimEventHandler;
 
-// <<< CUSTOM
-// END CUSTOM

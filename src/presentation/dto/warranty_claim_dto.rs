@@ -338,7 +338,7 @@ impl backbone_core::ApplyUpdateDto<UpdateWarrantyClaimDto> for WarrantyClaim {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to WarrantyClaim here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

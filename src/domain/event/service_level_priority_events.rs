@@ -11,8 +11,6 @@ use crate::domain::entity::ServiceLevelPriority;
 /// enum containing a `Crud(CrudEvent<ServiceLevelPriority>)` variant.
 pub type ServiceLevelPriorityEvent = CrudEvent<ServiceLevelPriority>;
 
-// <<< CUSTOM
-// END CUSTOM
 
 use backbone_messaging::{CrudEventPublisher, NoOpCrudEventPublisher};
 use std::sync::Arc;

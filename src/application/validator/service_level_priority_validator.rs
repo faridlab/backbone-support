@@ -17,9 +17,5 @@ pub fn service_level_priority_validator() -> ServiceLevelPriorityValidator {
     EntityValidator::new()
         .rule(NonNegative::new("response_time_mins", |e: &ServiceLevelPriority| e.response_time_mins as i64))
         .rule(NonNegative::new("resolution_time_mins", |e: &ServiceLevelPriority| e.resolution_time_mins as i64))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

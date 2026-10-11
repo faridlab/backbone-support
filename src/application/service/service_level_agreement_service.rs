@@ -32,5 +32,3 @@ pub type ServiceLevelAgreementService = GenericCrudService<
     ServiceLevelAgreementRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

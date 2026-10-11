@@ -18,5 +18,3 @@ use crate::domain::entity::WarrantyClaim;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type WarrantyClaimDomainPolicy = PermitAllPolicy<WarrantyClaim>;
 
-// <<< CUSTOM
-// END CUSTOM

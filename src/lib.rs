@@ -24,8 +24,6 @@ pub mod application;
 pub mod presentation;
 pub mod seeders;
 pub mod exports;
-// <<< CUSTOM MODULES
-// END CUSTOM
 
 // Re-exports for convenience - Domain entities
 pub use domain::entity::*;
@@ -60,8 +58,6 @@ pub struct SupportModule {
     pub(crate) service_level_agreement_service: Arc<ServiceLevelAgreementService>,
     pub(crate) service_level_priority_service: Arc<ServiceLevelPriorityService>,
     pub(crate) warranty_claim_service: Arc<WarrantyClaimService>,
-    // <<< CUSTOM FIELDS
-    // END CUSTOM
 }
 
 impl SupportModule {
@@ -120,15 +116,11 @@ impl SupportModule {
             .merge(create_warranty_claim_read_routes(self.warranty_claim_service.clone()))
     }
 
-    // <<< CUSTOM METHODS
-    // END CUSTOM
 }
 
 /// Builder for SupportModule
 pub struct SupportModuleBuilder {
     db_pool: Option<PgPool>,
-    // <<< CUSTOM BUILDER FIELDS
-    // END CUSTOM
 }
 
 impl SupportModuleBuilder {
@@ -136,8 +128,6 @@ impl SupportModuleBuilder {
     pub fn new() -> Self {
         Self {
             db_pool: None,
-            // <<< CUSTOM BUILDER DEFAULTS
-            // END CUSTOM
         }
     }
 
@@ -147,8 +137,6 @@ impl SupportModuleBuilder {
         self
     }
 
-    // <<< CUSTOM - custom builder methods
-    // END CUSTOM
 
     /// Build the module with configured dependencies
     pub fn build(self) -> anyhow::Result<SupportModule> {
@@ -171,16 +159,12 @@ impl SupportModuleBuilder {
         let warranty_claim_repository = Arc::new(WarrantyClaimRepository::new(db_pool.clone()));
         let warranty_claim_service = Arc::new(WarrantyClaimService::with_repository(warranty_claim_repository.clone()));
 
-        // <<< CUSTOM
-        // END CUSTOM
 
         Ok(SupportModule {
             issue_service,
             service_level_agreement_service,
             service_level_priority_service,
             warranty_claim_service,
-            // <<< CUSTOM
-            // END CUSTOM
         })
     }
 }

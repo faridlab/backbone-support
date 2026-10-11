@@ -18,9 +18,5 @@ pub fn warranty_claim_validator() -> WarrantyClaimValidator {
         .rule(OptionalNotBlank::new("serial_no", |e: &WarrantyClaim| e.serial_no.as_deref()))
         .rule(OptionalNotBlank::new("description", |e: &WarrantyClaim| e.description.as_deref()))
         .rule(OptionalNotBlank::new("resolution", |e: &WarrantyClaim| e.resolution.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

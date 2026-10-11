@@ -16,9 +16,5 @@ pub type ServiceLevelAgreementValidator = EntityValidator<ServiceLevelAgreement>
 pub fn service_level_agreement_validator() -> ServiceLevelAgreementValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &ServiceLevelAgreement| &e.name))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

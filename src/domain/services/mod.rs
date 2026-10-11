@@ -12,5 +12,3 @@ pub use service_level_agreement_domain_policy::ServiceLevelAgreementDomainPolicy
 pub use service_level_priority_domain_policy::ServiceLevelPriorityDomainPolicy;
 pub use warranty_claim_domain_policy::WarrantyClaimDomainPolicy;
 
-// <<< CUSTOM
-// END CUSTOM

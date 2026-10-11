@@ -249,7 +249,7 @@ impl backbone_core::ApplyUpdateDto<UpdateServiceLevelAgreementDto> for ServiceLe
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to ServiceLevelAgreement here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

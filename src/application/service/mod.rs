@@ -12,15 +12,11 @@ pub mod service_level_agreement_service;
 pub mod service_level_priority_service;
 pub mod warranty_claim_service;
 
-// <<< CUSTOM
-// END CUSTOM
 
 pub use issue_service::IssueService;
 pub use service_level_agreement_service::ServiceLevelAgreementService;
 pub use service_level_priority_service::ServiceLevelPriorityService;
 pub use warranty_claim_service::WarrantyClaimService;
-// <<< CUSTOM
-// END CUSTOM
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

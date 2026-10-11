@@ -11,5 +11,3 @@ pub mod service_level_agreement_specification;
 pub mod service_level_priority_specification;
 pub mod warranty_claim_specification;
 
-// <<< CUSTOM
-// END CUSTOM
