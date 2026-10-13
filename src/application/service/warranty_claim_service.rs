@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<WarrantyClaim> for WarrantyClaimRowR
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `item_id_required` (@required on WarrantyClaim.item_id)
         if (create || (update && r::changed(old.as_ref(), row, &["item_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "item_id")), r::not(r::is_empty(r::trim(r::field(row, "item_id")))))) {
@@ -64,15 +64,15 @@ impl backbone_core::write_guard::WriteGuard<WarrantyClaim> for WarrantyClaimRowR
         }
         // `serial_no_max_length` (@max(140) on WarrantyClaim.serial_no)
         if (create || (update && r::changed(old.as_ref(), row, &["serial_no"]))) && !r::holds(&r::le(r::length(r::field(row, "serial_no")), r::Val::Num(140.0_f64))) {
-            shadow.push(Violation::new("serial_no", "max_length", "serial_no must be at most 140 characters").with_param("max", 140_i64));
+            refuse.push(Violation::new("serial_no", "max_length", "serial_no must be at most 140 characters").with_param("max", 140_i64));
         }
         // `description_max_length` (@max(2000) on WarrantyClaim.description)
         if (create || (update && r::changed(old.as_ref(), row, &["description"]))) && !r::holds(&r::le(r::length(r::field(row, "description")), r::Val::Num(2000.0_f64))) {
-            shadow.push(Violation::new("description", "max_length", "description must be at most 2000 characters").with_param("max", 2000_i64));
+            refuse.push(Violation::new("description", "max_length", "description must be at most 2000 characters").with_param("max", 2000_i64));
         }
         // `resolution_max_length` (@max(2000) on WarrantyClaim.resolution)
         if (create || (update && r::changed(old.as_ref(), row, &["resolution"]))) && !r::holds(&r::le(r::length(r::field(row, "resolution")), r::Val::Num(2000.0_f64))) {
-            shadow.push(Violation::new("resolution", "max_length", "resolution must be at most 2000 characters").with_param("max", 2000_i64));
+            refuse.push(Violation::new("resolution", "max_length", "resolution must be at most 2000 characters").with_param("max", 2000_i64));
         }
         GuardOutcome { refuse, shadow }
     }

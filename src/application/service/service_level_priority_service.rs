@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<ServiceLevelPriority> for ServiceLev
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `sla_id_required` (@required on ServiceLevelPriority.sla_id)
         if (create || (update && r::changed(old.as_ref(), row, &["sla_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "sla_id")), r::not(r::is_empty(r::trim(r::field(row, "sla_id")))))) {
@@ -64,11 +64,11 @@ impl backbone_core::write_guard::WriteGuard<ServiceLevelPriority> for ServiceLev
         }
         // `response_time_mins_non_negative` (@non_negative on ServiceLevelPriority.response_time_mins)
         if (create || (update && r::changed(old.as_ref(), row, &["response_time_mins"]))) && !r::holds(&r::ge(r::field(row, "response_time_mins"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("response_time_mins", "non_negative", "response_time_mins must not be negative"));
+            refuse.push(Violation::new("response_time_mins", "non_negative", "response_time_mins must not be negative"));
         }
         // `resolution_time_mins_non_negative` (@non_negative on ServiceLevelPriority.resolution_time_mins)
         if (create || (update && r::changed(old.as_ref(), row, &["resolution_time_mins"]))) && !r::holds(&r::ge(r::field(row, "resolution_time_mins"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("resolution_time_mins", "non_negative", "resolution_time_mins must not be negative"));
+            refuse.push(Violation::new("resolution_time_mins", "non_negative", "resolution_time_mins must not be negative"));
         }
         GuardOutcome { refuse, shadow }
     }
