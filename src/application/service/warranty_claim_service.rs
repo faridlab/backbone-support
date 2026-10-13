@@ -32,3 +32,49 @@ pub type WarrantyClaimService = GenericCrudService<
     WarrantyClaimRepository,
 >;
 
+/// The rules the schema declares for WarrantyClaim, checked against the row a create or update
+/// would store. The generated build attaches it to [`WarrantyClaimService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct WarrantyClaimRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<WarrantyClaim> for WarrantyClaimRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, WarrantyClaim>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let mut shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `item_id_required` (@required on WarrantyClaim.item_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["item_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "item_id")), r::not(r::is_empty(r::trim(r::field(row, "item_id")))))) {
+            refuse.push(Violation::new("item_id", "required", "item_id is required"));
+        }
+        // `serial_no_max_length` (@max(140) on WarrantyClaim.serial_no)
+        if (create || (update && r::changed(old.as_ref(), row, &["serial_no"]))) && !r::holds(&r::le(r::length(r::field(row, "serial_no")), r::Val::Num(140.0_f64))) {
+            shadow.push(Violation::new("serial_no", "max_length", "serial_no must be at most 140 characters").with_param("max", 140_i64));
+        }
+        // `description_max_length` (@max(2000) on WarrantyClaim.description)
+        if (create || (update && r::changed(old.as_ref(), row, &["description"]))) && !r::holds(&r::le(r::length(r::field(row, "description")), r::Val::Num(2000.0_f64))) {
+            shadow.push(Violation::new("description", "max_length", "description must be at most 2000 characters").with_param("max", 2000_i64));
+        }
+        // `resolution_max_length` (@max(2000) on WarrantyClaim.resolution)
+        if (create || (update && r::changed(old.as_ref(), row, &["resolution"]))) && !r::holds(&r::le(r::length(r::field(row, "resolution")), r::Val::Num(2000.0_f64))) {
+            shadow.push(Violation::new("resolution", "max_length", "resolution must be at most 2000 characters").with_param("max", 2000_i64));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+

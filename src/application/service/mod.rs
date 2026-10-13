@@ -17,6 +17,10 @@ pub use issue_service::IssueService;
 pub use service_level_agreement_service::ServiceLevelAgreementService;
 pub use service_level_priority_service::ServiceLevelPriorityService;
 pub use warranty_claim_service::WarrantyClaimService;
+pub use issue_service::IssueRowRules;
+pub use service_level_agreement_service::ServiceLevelAgreementRowRules;
+pub use service_level_priority_service::ServiceLevelPriorityRowRules;
+pub use warranty_claim_service::WarrantyClaimRowRules;
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

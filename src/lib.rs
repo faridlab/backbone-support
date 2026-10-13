@@ -145,19 +145,19 @@ impl SupportModuleBuilder {
 
         // Issue service
         let issue_repository = Arc::new(IssueRepository::new(db_pool.clone()));
-        let issue_service = Arc::new(IssueService::with_repository(issue_repository.clone()));
+        let issue_service = Arc::new(IssueService::with_repository(issue_repository.clone()).with_guard(Arc::new(crate::application::service::IssueRowRules)));
 
         // ServiceLevelAgreement service
         let service_level_agreement_repository = Arc::new(ServiceLevelAgreementRepository::new(db_pool.clone()));
-        let service_level_agreement_service = Arc::new(ServiceLevelAgreementService::with_repository(service_level_agreement_repository.clone()));
+        let service_level_agreement_service = Arc::new(ServiceLevelAgreementService::with_repository(service_level_agreement_repository.clone()).with_guard(Arc::new(crate::application::service::ServiceLevelAgreementRowRules)));
 
         // ServiceLevelPriority service
         let service_level_priority_repository = Arc::new(ServiceLevelPriorityRepository::new(db_pool.clone()));
-        let service_level_priority_service = Arc::new(ServiceLevelPriorityService::with_repository(service_level_priority_repository.clone()));
+        let service_level_priority_service = Arc::new(ServiceLevelPriorityService::with_repository(service_level_priority_repository.clone()).with_guard(Arc::new(crate::application::service::ServiceLevelPriorityRowRules)));
 
         // WarrantyClaim service
         let warranty_claim_repository = Arc::new(WarrantyClaimRepository::new(db_pool.clone()));
-        let warranty_claim_service = Arc::new(WarrantyClaimService::with_repository(warranty_claim_repository.clone()));
+        let warranty_claim_service = Arc::new(WarrantyClaimService::with_repository(warranty_claim_repository.clone()).with_guard(Arc::new(crate::application::service::WarrantyClaimRowRules)));
 
 
         Ok(SupportModule {

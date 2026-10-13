@@ -32,3 +32,45 @@ pub type ServiceLevelPriorityService = GenericCrudService<
     ServiceLevelPriorityRepository,
 >;
 
+/// The rules the schema declares for ServiceLevelPriority, checked against the row a create or update
+/// would store. The generated build attaches it to [`ServiceLevelPriorityService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct ServiceLevelPriorityRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<ServiceLevelPriority> for ServiceLevelPriorityRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, ServiceLevelPriority>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let mut shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `sla_id_required` (@required on ServiceLevelPriority.sla_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["sla_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "sla_id")), r::not(r::is_empty(r::trim(r::field(row, "sla_id")))))) {
+            refuse.push(Violation::new("sla_id", "required", "sla_id is required"));
+        }
+        // `response_time_mins_non_negative` (@non_negative on ServiceLevelPriority.response_time_mins)
+        if (create || (update && r::changed(old.as_ref(), row, &["response_time_mins"]))) && !r::holds(&r::ge(r::field(row, "response_time_mins"), r::Val::Num(0.0_f64))) {
+            shadow.push(Violation::new("response_time_mins", "non_negative", "response_time_mins must not be negative"));
+        }
+        // `resolution_time_mins_non_negative` (@non_negative on ServiceLevelPriority.resolution_time_mins)
+        if (create || (update && r::changed(old.as_ref(), row, &["resolution_time_mins"]))) && !r::holds(&r::ge(r::field(row, "resolution_time_mins"), r::Val::Num(0.0_f64))) {
+            shadow.push(Violation::new("resolution_time_mins", "non_negative", "resolution_time_mins must not be negative"));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+
