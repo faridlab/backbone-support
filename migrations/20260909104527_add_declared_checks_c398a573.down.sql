@@ -1,0 +1,14 @@
+-- Down: drop the declared rule constraints for support module
+ALTER TABLE IF EXISTS support.warranty_claims DROP CONSTRAINT IF EXISTS ck_warranty_claims_resolution_max_length__max_length;
+ALTER TABLE IF EXISTS support.warranty_claims DROP CONSTRAINT IF EXISTS ck_warranty_claims_description_max_length__max_length;
+ALTER TABLE IF EXISTS support.warranty_claims DROP CONSTRAINT IF EXISTS ck_warranty_claims_serial_no_max_length__max_length;
+ALTER TABLE IF EXISTS support.warranty_claims DROP CONSTRAINT IF EXISTS ck_warranty_claims_item_id_required__required;
+ALTER TABLE IF EXISTS support.service_level_priorities DROP CONSTRAINT IF EXISTS ck_service_level_priorities_resolution_t_9d89442d__non_negative;
+ALTER TABLE IF EXISTS support.service_level_priorities DROP CONSTRAINT IF EXISTS ck_service_level_priorities_response_tim_41b1f006__non_negative;
+ALTER TABLE IF EXISTS support.service_level_priorities DROP CONSTRAINT IF EXISTS ck_service_level_priorities_sla_id_required__required;
+ALTER TABLE IF EXISTS support.service_level_agreements DROP CONSTRAINT IF EXISTS ck_service_level_agreements_name_max_length__max_length;
+ALTER TABLE IF EXISTS support.service_level_agreements DROP CONSTRAINT IF EXISTS ck_service_level_agreements_name_required__required;
+ALTER TABLE IF EXISTS support.issues DROP CONSTRAINT IF EXISTS ck_issues_total_paused_mins_non_negative__non_negative;
+ALTER TABLE IF EXISTS support.issues DROP CONSTRAINT IF EXISTS ck_issues_description_max_length__max_length;
+ALTER TABLE IF EXISTS support.issues DROP CONSTRAINT IF EXISTS ck_issues_subject_max_length__max_length;
+ALTER TABLE IF EXISTS support.issues DROP CONSTRAINT IF EXISTS ck_issues_subject_required__required;
