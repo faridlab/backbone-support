@@ -22,5 +22,37 @@ pub use service_level_agreement_service::ServiceLevelAgreementRowRules;
 pub use service_level_priority_service::ServiceLevelPriorityRowRules;
 pub use warranty_claim_service::WarrantyClaimRowRules;
 
+/// A `IssueService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_issue_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::IssueRepository>,
+) -> IssueService {
+    IssueService::with_repository(repository).with_guard(std::sync::Arc::new(IssueRowRules))
+}
+
+/// A `ServiceLevelAgreementService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_service_level_agreement_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ServiceLevelAgreementRepository>,
+) -> ServiceLevelAgreementService {
+    ServiceLevelAgreementService::with_repository(repository).with_guard(std::sync::Arc::new(ServiceLevelAgreementRowRules))
+}
+
+/// A `ServiceLevelPriorityService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_service_level_priority_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ServiceLevelPriorityRepository>,
+) -> ServiceLevelPriorityService {
+    ServiceLevelPriorityService::with_repository(repository).with_guard(std::sync::Arc::new(ServiceLevelPriorityRowRules))
+}
+
+/// A `WarrantyClaimService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_warranty_claim_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::WarrantyClaimRepository>,
+) -> WarrantyClaimService {
+    WarrantyClaimService::with_repository(repository).with_guard(std::sync::Arc::new(WarrantyClaimRowRules))
+}
+
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");
