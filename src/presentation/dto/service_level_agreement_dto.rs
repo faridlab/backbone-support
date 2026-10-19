@@ -32,9 +32,14 @@ pub struct CreateServiceLevelAgreementDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_default")]
+    #[serde(default, alias = "is_default")]
     pub is_default: bool,
+    #[serde(default = "default_create_service_level_agreement_status")]
     pub status: ServiceLevelAgreementStatus,
+}
+
+fn default_create_service_level_agreement_status() -> ServiceLevelAgreementStatus {
+    ServiceLevelAgreementStatus::Active
 }
 
 // =============================================================================
@@ -235,12 +240,4 @@ impl backbone_core::ApplyUpdateDto<UpdateServiceLevelAgreementDto> for ServiceLe
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ServiceLevelAgreement here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

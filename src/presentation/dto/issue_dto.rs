@@ -37,11 +37,13 @@ pub struct CreateIssueDto {
     pub subject: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(default = "default_create_issue_priority")]
     pub priority: IssuePriority,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "sla_id")]
     pub sla_id: Option<Uuid>,
+    #[serde(default = "default_create_issue_status")]
     pub status: IssueStatus,
-    #[serde(alias = "agreement_status")]
+    #[serde(default = "default_create_issue_agreement_status", alias = "agreement_status")]
     pub agreement_status: AgreementStatus,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "opened_at")]
@@ -53,17 +55,29 @@ pub struct CreateIssueDto {
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "first_responded_at")]
     pub first_responded_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "response_breached")]
+    #[serde(default, alias = "response_breached")]
     pub response_breached: bool,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "resolved_at")]
     pub resolved_at: Option<DateTime<Utc>>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "paused_at")]
     pub paused_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
-    #[serde(alias = "total_paused_mins")]
+    #[serde(default, alias = "total_paused_mins")]
     pub total_paused_mins: i32,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "escalated_project_id")]
     pub escalated_project_id: Option<Uuid>,
+}
+
+fn default_create_issue_priority() -> IssuePriority {
+    IssuePriority::Medium
+}
+
+fn default_create_issue_status() -> IssueStatus {
+    IssueStatus::Open
+}
+
+fn default_create_issue_agreement_status() -> AgreementStatus {
+    AgreementStatus::FirstResponseDue
 }
 
 // =============================================================================
@@ -125,17 +139,17 @@ pub struct UpdateIssueDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchIssueDto {
-    #[serde(skip_serializing_if = "Option::is_none", alias = "customer_id")]
-    pub customer_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "customer_id")]
+    pub customer_id: Option<Option<Uuid>>,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub description: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub priority: Option<IssuePriority>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "sla_id")]
-    pub sla_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "sla_id")]
+    pub sla_id: Option<Option<Uuid>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<IssueStatus>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "agreement_status")]
@@ -143,24 +157,24 @@ pub struct PatchIssueDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "opened_at")]
     pub opened_at: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "response_by")]
-    pub response_by: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "resolution_by")]
-    pub resolution_by: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "first_responded_at")]
-    pub first_responded_at: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "response_by")]
+    pub response_by: Option<Option<DateTime<Utc>>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "resolution_by")]
+    pub resolution_by: Option<Option<DateTime<Utc>>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "first_responded_at")]
+    pub first_responded_at: Option<Option<DateTime<Utc>>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "response_breached")]
     pub response_breached: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "resolved_at")]
-    pub resolved_at: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "paused_at")]
-    pub paused_at: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "resolved_at")]
+    pub resolved_at: Option<Option<DateTime<Utc>>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "paused_at")]
+    pub paused_at: Option<Option<DateTime<Utc>>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "total_paused_mins")]
     pub total_paused_mins: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "escalated_project_id")]
-    pub escalated_project_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "escalated_project_id")]
+    pub escalated_project_id: Option<Option<Uuid>>,
 }
 
 impl PatchIssueDto {
@@ -386,12 +400,4 @@ impl backbone_core::ApplyUpdateDto<UpdateIssueDto> for Issue {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to Issue here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

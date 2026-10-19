@@ -1576,13 +1576,7 @@ components:
       type: object
       required:
         - subject
-        - priority
-        - status
-        - agreement_status
         - opened_at
-        - response_breached
-        - total_paused_mins
-        - metadata
       properties:
         customer_id:
           nullable: true
@@ -1637,8 +1631,6 @@ components:
           nullable: true
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateIssueRequest:
       type: object
@@ -1650,7 +1642,6 @@ components:
         - opened_at
         - response_breached
         - total_paused_mins
-        - metadata
       properties:
         customer_id:
           nullable: true
@@ -1705,8 +1696,6 @@ components:
           nullable: true
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchIssueRequest:
       type: object
@@ -1764,8 +1753,6 @@ components:
           nullable: true
           type: string
           format: uuid
-        metadata:
-          type: object
 
     IssueList:
       type: object
@@ -1816,9 +1803,6 @@ components:
       type: object
       required:
         - name
-        - is_default
-        - status
-        - metadata
       properties:
         name:
           type: string
@@ -1827,8 +1811,6 @@ components:
           type: boolean
         status:
           type: string
-        metadata:
-          type: object
 
     UpdateServiceLevelAgreementRequest:
       type: object
@@ -1836,7 +1818,6 @@ components:
         - name
         - is_default
         - status
-        - metadata
       properties:
         name:
           type: string
@@ -1845,8 +1826,6 @@ components:
           type: boolean
         status:
           type: string
-        metadata:
-          type: object
 
     PatchServiceLevelAgreementRequest:
       type: object
@@ -1858,8 +1837,6 @@ components:
           type: boolean
         status:
           type: string
-        metadata:
-          type: object
 
     ServiceLevelAgreementList:
       type: object
@@ -1918,7 +1895,6 @@ components:
         - priority
         - response_time_mins
         - resolution_time_mins
-        - metadata
       properties:
         sla_id:
           type: string
@@ -1931,8 +1907,6 @@ components:
         resolution_time_mins:
           type: integer
           format: int32
-        metadata:
-          type: object
 
     UpdateServiceLevelPriorityRequest:
       type: object
@@ -1941,7 +1915,6 @@ components:
         - priority
         - response_time_mins
         - resolution_time_mins
-        - metadata
       properties:
         sla_id:
           type: string
@@ -1954,8 +1927,6 @@ components:
         resolution_time_mins:
           type: integer
           format: int32
-        metadata:
-          type: object
 
     PatchServiceLevelPriorityRequest:
       type: object
@@ -1971,8 +1942,6 @@ components:
         resolution_time_mins:
           type: integer
           format: int32
-        metadata:
-          type: object
 
     ServiceLevelPriorityList:
       type: object
@@ -2052,9 +2021,6 @@ components:
       required:
         - item_id
         - claim_date
-        - is_under_warranty
-        - status
-        - metadata
       properties:
         customer_id:
           nullable: true
@@ -2090,8 +2056,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     UpdateWarrantyClaimRequest:
       type: object
@@ -2100,7 +2064,6 @@ components:
         - claim_date
         - is_under_warranty
         - status
-        - metadata
       properties:
         customer_id:
           nullable: true
@@ -2136,8 +2099,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     PatchWarrantyClaimRequest:
       type: object
@@ -2176,8 +2137,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     WarrantyClaimList:
       type: object

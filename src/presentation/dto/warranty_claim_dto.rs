@@ -42,8 +42,9 @@ pub struct CreateWarrantyClaimDto {
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "warranty_expiry")]
     pub warranty_expiry: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_under_warranty")]
+    #[serde(default, alias = "is_under_warranty")]
     pub is_under_warranty: bool,
+    #[serde(default = "default_create_warranty_claim_status")]
     pub status: WarrantyStatus,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "issue_id")]
     pub issue_id: Option<Uuid>,
@@ -51,6 +52,10 @@ pub struct CreateWarrantyClaimDto {
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resolution: Option<String>,
+}
+
+fn default_create_warranty_claim_status() -> WarrantyStatus {
+    WarrantyStatus::Open
 }
 
 // =============================================================================
@@ -101,29 +106,29 @@ pub struct UpdateWarrantyClaimDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchWarrantyClaimDto {
-    #[serde(skip_serializing_if = "Option::is_none", alias = "customer_id")]
-    pub customer_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "customer_id")]
+    pub customer_id: Option<Option<Uuid>>,
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "item_id")]
     pub item_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "serial_no")]
-    pub serial_no: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "serial_no")]
+    pub serial_no: Option<Option<String>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "claim_date")]
     pub claim_date: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "warranty_expiry")]
-    pub warranty_expiry: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "warranty_expiry")]
+    pub warranty_expiry: Option<Option<DateTime<Utc>>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_under_warranty")]
     pub is_under_warranty: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<WarrantyStatus>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "issue_id")]
-    pub issue_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolution: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "issue_id")]
+    pub issue_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub description: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub resolution: Option<Option<String>>,
 }
 
 impl PatchWarrantyClaimDto {
@@ -318,12 +323,4 @@ impl backbone_core::ApplyUpdateDto<UpdateWarrantyClaimDto> for WarrantyClaim {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to WarrantyClaim here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

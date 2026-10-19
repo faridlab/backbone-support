@@ -80,6 +80,13 @@ impl axum::response::IntoResponse for ServiceLevelPriorityError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `service_level_priority:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn service_level_priority_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("service_level_priority")
+        .in_module("support")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for ServiceLevelPriority.
 ///
 /// # Routes
@@ -109,21 +116,23 @@ impl axum::response::IntoResponse for ServiceLevelPriorityError {
 /// let router = create_service_level_priority_routes(service);
 /// ```
 pub fn create_service_level_priority_routes(service: Arc<ServiceLevelPriorityService>) -> Router {
-    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::routes(
+    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::routes_guarded(
         service,
         "/service_level_priorities",
+        service_level_priority_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for ServiceLevelPriority.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_service_level_priority_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_service_level_priority_read_routes(service: Arc<ServiceLevelPriorityService>) -> Router {
-    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::read_routes(
+    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::read_routes_guarded(
         service,
         "/service_level_priorities",
+        service_level_priority_permissions(),
     )
 }
 
@@ -139,9 +148,10 @@ pub fn create_service_level_priority_read_routes(service: Arc<ServiceLevelPriori
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_service_level_priority_write_routes(service: Arc<ServiceLevelPriorityService>) -> Router {
-    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::write_routes(
+    BackboneCrudHandler::<ServiceLevelPriorityService, ServiceLevelPriority, CreateServiceLevelPriorityDto, UpdateServiceLevelPriorityDto, ServiceLevelPriorityResponseDto>::write_routes_guarded(
         service,
         "/service_level_priorities",
+        service_level_priority_permissions(),
     )
 }
 
